@@ -1,0 +1,25 @@
+{
+  "name": "library-management-system",
+  "version": "1.0.0",
+  "description": "This is the library management system for the Rajkiya Engineering College, Ambedkar Nagar",
+  "keywords": [
+    "lms"
+  ],
+  "license": "MIT",
+  "author": "Hrittik-maurya",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "ejs": "^7.0.1",
+    "ejs-mate": "^4.0.0",
+    "express": "^5.2.1",
+    "method-override": "^3.0.0",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.4"
+  }
+}
