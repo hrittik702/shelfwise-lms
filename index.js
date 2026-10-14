@@ -44,6 +44,21 @@ app.listen(port, '0.0.0.0', () => {
   console.log(` Server is running on port ${port}`);
 });
 
+app.get('/login', (req, res) => {
+  res.render('login.ejs');
+});
+
+app.get('/users', async (req, res) => {
+  try {
+    // Run your SQL query using await
+    const [rows] = await db.query('SELECT * FROM users');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.render('./index.ejs');
 });
