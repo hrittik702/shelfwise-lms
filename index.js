@@ -18,6 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
 
+// password hashing
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+const salt1 = 's0/\/\P4$$w0rD';
+
 //connecting to mysql
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -46,6 +51,24 @@ app.listen(port, '0.0.0.0', () => {
 
 app.get('/login', (req, res) => {
   res.render('login.ejs');
+});
+
+app.post('/login', (req, res) => {
+  // const salt = bcrypt.genSaltSync(saltRounds);
+  // console.log(bcrypt.hashSync(req.body.password, salt));
+  bcrypt.genSalt(saltRounds, function (err, salt) {
+    bcrypt.hash(req.body.password, salt, function (err, hash) {
+      const sql = `INSERT INTO staff(name,username,password) values (?,?,?)`;
+      const result = db.query(sql, [req.body.name, req.body.username, hash], (err, res) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).send('Error Saving staff');
+        }
+      });
+      console.log('Query OK, Insert ID : ', result.insertId);
+      res.status(200).send('Staff added successfully');
+    });
+  });
 });
 
 app.get('/users', async (req, res) => {

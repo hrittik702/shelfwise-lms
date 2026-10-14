@@ -14,7 +14,27 @@
         </div>
 
         <!-- Login Form -->
-        <form action="/user/login" method="POST" class="needs-validation" novalidate>
+        <form action="/login" method="POST" class="needs-validation" novalidate>
+          <div class="mb-3">
+            <label for="username" class="auth-form-label">
+              <span>Name</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text border-end-0">
+                <i class="bi bi-person"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control auth-form-control border-start-0 ps-0"
+                name="name"
+                id="name"
+                placeholder="Enter your name"
+                autocomplete="name"
+                required
+              />
+              <div class="invalid-feedback">Please enter your username.</div>
+            </div>
+          </div>
           <!-- Username Input -->
           <div class="mb-3">
             <label for="username" class="auth-form-label">

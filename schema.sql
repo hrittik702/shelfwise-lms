@@ -1,0 +1,1 @@
+CREATE TABLE staff (staff_id int AUTO_INCREMENT PRIMARY KEY, name varchar(50), username varchar(20) UNIQUE, password varchar(100));
