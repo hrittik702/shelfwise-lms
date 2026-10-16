@@ -21,7 +21,7 @@ app.use(methodOverride('_method'));
 // password hashing
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const salt1 = 's0/\/\P4$$w0rD';
+// const salt1 = 's0/\/\P4$$w0rD';
 
 //connecting to mysql
 const pool = mysql.createPool({
@@ -34,6 +34,27 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+// session Management
+const session = require('express-session');
+const MySQLStoreFactory = require('express-mysql-session');
+const MySQLStore = MySQLStoreFactory(session);
+const sessionStore = new MySQLStore({}, pool);
+
+app.use(
+  session({
+    key: 'lms-cookie',
+    secret: 'WdC2027@fJE-LMS',
+    store: sessionStore, // save session data in mysql
+    resave: false,
+    saveUninitialized: true, //empty anonymous visitors
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24,
+      httpOnly: true,
+      secure: false,
+    },
+  })
+);
 
 const db = pool.promise();
 db.getConnection()
@@ -49,11 +70,12 @@ app.listen(port, '0.0.0.0', () => {
   console.log(` Server is running on port ${port}`);
 });
 
-app.get('/login', (req, res) => {
-  res.render('login.ejs');
+// routes for registering staff
+app.get('/signup', (req, res) => {
+  res.render('signup.ejs');
 });
 
-app.post('/login', (req, res) => {
+app.post('/signup', async (req, res) => {
   // const salt = bcrypt.genSaltSync(saltRounds);
   // console.log(bcrypt.hashSync(req.body.password, salt));
   bcrypt.genSalt(saltRounds, function (err, salt) {
@@ -69,6 +91,32 @@ app.post('/login', (req, res) => {
       res.status(200).send('Staff added successfully');
     });
   });
+});
+
+// login routes for staff
+app.get('/login', (req, res) => {
+  res.render('login.ejs');
+});
+
+app.post('/login', async (req, res) => {
+  // const salt = bcrypt.genSaltSync(saltRounds);
+  try {
+    const { username, password } = req.body;
+    const sql = `Select password from staff where username=?`;
+    const [[staff]] = await db.query(sql, [username]);
+    if (staff == undefined) {
+      return res.status(401).send(`No Staff found with username : ${username}`);
+    }
+    const isMatched = await bcrypt.compare(password, staff.password);
+    if (!isMatched) {
+      return res.status(401).send('Invalid username or password');
+    }
+    // Success!
+    res.status(200).send('Login successful!');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('An error Occurred during login');
+  }
 });
 
 app.get('/users', async (req, res) => {

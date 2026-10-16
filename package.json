@@ -10,6 +10,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -18,11 +19,28 @@
     "ejs": "^7.0.1",
     "ejs-mate": "^4.0.0",
     "express": "^5.3.0",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.19.0",
     "method-override": "^3.0.0",
     "mysql2": "^3.24.6",
     "path": "^0.12.7"
   },
   "devDependencies": {
-    "nodemon": "^1.19.4"
+    "nodemon": "^1.14.10"
+  },
+  "overrides": {
+    "nodemon": {
+      "chokidar": {
+        "braces": "^3.0.3"
+      }
+    },
+    "express-mysql-session": {
+      "mysql2": "^3.24.6"
+    },
+    "braces": "^3.0.3"
+  },
+  "allowScripts": {
+    "bcrypt@6.0.0": true,
+    "nodemon@3.1.14": true
   }
 }

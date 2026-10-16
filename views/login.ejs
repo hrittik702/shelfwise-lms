@@ -4,37 +4,14 @@
     <div class="col-xl-5 col-lg-6 col-md-8 col-sm-10 col-12">
       <div class="auth-card">
         <div class="text-center mb-4">
-          <div class="auth-brand-badge">
-            <i class="bi bi-compass-fill"></i>
-          </div>
           <h2 class="auth-title">Welcome back</h2>
           <p class="auth-subtitle">
-            Log in to your ShelfWise account to manage your stays and bookings.
+            Log in to your ShelfWise account to manage your books and issue.
           </p>
         </div>
 
         <!-- Login Form -->
         <form action="/login" method="POST" class="needs-validation" novalidate>
-          <div class="mb-3">
-            <label for="username" class="auth-form-label">
-              <span>Name</span>
-            </label>
-            <div class="input-group">
-              <span class="input-group-text border-end-0">
-                <i class="bi bi-person"></i>
-              </span>
-              <input
-                type="text"
-                class="form-control auth-form-control border-start-0 ps-0"
-                name="name"
-                id="name"
-                placeholder="Enter your name"
-                autocomplete="name"
-                required
-              />
-              <div class="invalid-feedback">Please enter your username.</div>
-            </div>
-          </div>
           <!-- Username Input -->
           <div class="mb-3">
             <label for="username" class="auth-form-label">
@@ -59,10 +36,6 @@
 
           <!-- Password Input -->
           <div class="mb-3">
-            <div class="d-flex align-items-center justify-content-between mb-1">
-              <label for="password" class="auth-form-label mb-0">Password</label>
-              <a href="#forgot" class="auth-forgot-link">Forgot password?</a>
-            </div>
             <div class="input-group auth-input-group">
               <span class="input-group-text border-end-0">
                 <i class="bi bi-lock"></i>
@@ -87,15 +60,6 @@
               <div class="invalid-feedback">Please enter your password.</div>
             </div>
           </div>
-
-          <!-- Remember Me -->
-          <div class="form-check auth-checkbox mb-4">
-            <input class="form-check-input" type="checkbox" id="rememberMe" />
-            <label class="form-check-label text-muted small user-select-none" for="rememberMe">
-              Remember me on this device
-            </label>
-          </div>
-
           <!-- Submit Button -->
           <button type="submit" class="btn btn-brand w-100 py-3 fw-bold auth-submit-btn">
             <span>Log In</span>
