@@ -6,19 +6,17 @@
         <div class="auth-card">
           <div class="text-center mb-4">
             <div class="auth-brand-badge">
-              <i class="bi bi-person-fill-lock"></i>
+              <i class="bi bi-person-plus-fill"></i>
             </div>
-            <h2 class="auth-title">Welcome back</h2>
-            <p class="auth-subtitle">
-              Log in to your ShelfWise account to manage library circulation.
-            </p>
+            <h2 class="auth-title">Create Account</h2>
+            <p class="auth-subtitle">Register a new staff account for ShelfWise.</p>
           </div>
 
-          <!-- Login Form -->
-          <form action="/login" method="POST" class="needs-validation" novalidate>
-            <!-- Username Input -->
+          <!-- Signup Form -->
+          <form action="/staff/signup" method="POST" class="needs-validation" novalidate>
+            <!-- Full Name Input -->
             <div class="mb-3">
-              <label for="username" class="auth-form-label">Username</label>
+              <label for="name" class="auth-form-label">Full Name</label>
               <div class="input-group has-validation">
                 <span class="input-group-text border-end-0 bg-transparent text-secondary">
                   <i class="bi bi-person"></i>
@@ -26,9 +24,29 @@
                 <input
                   type="text"
                   class="form-control border-start-0 ps-0"
+                  name="name"
+                  id="name"
+                  placeholder="Enter your full name"
+                  autocomplete="name"
+                  required
+                />
+                <div class="invalid-feedback">Please enter your name.</div>
+              </div>
+            </div>
+
+            <!-- Username Input -->
+            <div class="mb-3">
+              <label for="signupUsername" class="auth-form-label">Username</label>
+              <div class="input-group has-validation">
+                <span class="input-group-text border-end-0 bg-transparent text-secondary">
+                  <i class="bi bi-at"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control border-start-0 ps-0"
                   name="username"
-                  id="username"
-                  placeholder="Enter your username"
+                  id="signupUsername"
+                  placeholder="Choose a username"
                   autocomplete="username"
                   required
                 />
@@ -38,7 +56,7 @@
 
             <!-- Password Input -->
             <div class="mb-4">
-              <label for="password" class="auth-form-label">Password</label>
+              <label for="signupPassword" class="auth-form-label">Password</label>
               <div class="input-group has-validation">
                 <span class="input-group-text border-end-0 bg-transparent text-secondary">
                   <i class="bi bi-lock"></i>
@@ -46,10 +64,10 @@
                 <input
                   type="password"
                   class="form-control border-start-0 border-end-0 px-0"
-                  id="password"
+                  id="signupPassword"
                   name="password"
-                  placeholder="Enter your password"
-                  autocomplete="current-password"
+                  placeholder="Create a strong password"
+                  autocomplete="new-password"
                   required
                 />
                 <button
@@ -67,15 +85,23 @@
 
             <!-- Submit Button -->
             <button type="submit" class="btn btn-brand w-100 py-3 fw-bold rounded-3">
-              <span>Log In</span>
+              <span>Sign Up</span>
               <i class="bi bi-arrow-right ms-2"></i>
             </button>
           </form>
 
-          <div class="text-center mt-4 pt-2 border-top" style="border-color: var(--sw-border) !important;">
+          <div
+            class="text-center mt-4 pt-2 border-top"
+            style="border-color: var(--sw-border) !important"
+          >
             <p class="text-secondary small mb-0">
-              Need a staff account?
-              <a href="/signup" class="text-decoration-none fw-semibold" style="color: var(--sw-emerald);">Sign Up</a>
+              Already have an account?
+              <a
+                href="/staff/login"
+                class="text-decoration-none fw-semibold"
+                style="color: var(--sw-emerald)"
+                >Log In</a
+              >
             </p>
           </div>
         </div>
@@ -83,8 +109,3 @@
     </div>
   </div>
 </div>
-
-<script>
-  // Password visibility toggle
- 
-</script>
