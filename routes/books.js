@@ -9,7 +9,6 @@ router.get(
   wrapAsync(async (req, res) => {
     const sql = `SELECT * from book_details`;
     const [books] = await db.query(sql);
-    // console.log(books);
     res.render('books.ejs', { books });
   })
 );
@@ -112,7 +111,6 @@ router.post(
       available_copies < total_copies ? available_copies : total_copies,
       book_id,
     ]);
-    console.log('Book Update');
     res.redirect(`/books/${book_id}`);
   })
 );
@@ -134,7 +132,6 @@ router.post(
       total_copies,
       total_copies,
     ]);
-    console.log(insert_book);
     res.redirect('/books');
   })
 );
