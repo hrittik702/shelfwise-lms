@@ -1,0 +1,103 @@
+<% layout('/layout/boilerplate') %>
+<div class="books-page container py-4 py-lg-5">
+
+  <!-- Page heading -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Book Catalog</h1>
+      <p class="text-secondary mb-0">
+        Browse the books available in the library.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill text-bg-light border px-3 py-2">
+        <%= books.length %> books
+      </span>
+      <a href="/books/new" class="btn btn-success btn-sm px-3" title="Add Book" aria-label="Add Book">
+        <span aria-hidden="true">+</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Responsive table -->
+  <div class="table-responsive border rounded-3 shadow-sm">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="ps-3 text-secondary small text-center">S.No.</th>
+          <th scope="col">Book Name</th>
+          <th scope="col">Author</th>
+          <th scope="col">Publisher</th>
+          <th scope="col" class="text-center">ISBN</th>
+          <!-- <th scope="col" class="text-center">Category</th> -->
+          <th scope="col" class="text-center" title="Available copies / total copies">In Stock</th>
+          <th scope="col" class="pe-3 text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (books.length > 0) { %>
+          <% books.forEach((book, index) => { %>
+            <%
+              const available = Number(book.available_copies) || 0;
+              const hasTotal = book.total_copies !== undefined && book.total_copies !== null;
+              const total = Number(book.total_copies) || 0;
+              const inStock = available > 0;
+            %>
+            <tr>
+              <td class="ps-3 text-center text-secondary small"><%= index + 1 %></td>
+
+              <td class="fw-semibold"><%= book.title %></td>
+
+              <td><%= book.author %></td>
+              
+              <td><%= book.publisher || '—' %></td>
+
+              <td class="font-monospace small text-nowrap text-secondary text-center">
+                <%= book.isbn %>
+              </td>
+
+
+              <!-- <td class="text-center">
+                <span class="badge rounded-pill text-bg-light border text-dark fw-normal">
+                  <%= book.category_name %>
+                </span>
+              </td> -->
+
+              <td class="text-center">
+                <span
+                  class="badge rounded-pill <%= inStock ? 'text-bg-success' : 'text-bg-danger' %>"
+                  title="<%= available %> available<%= hasTotal ? ' of ' + total + ' total' : '' %>"
+                >
+                  <%= available %><%= hasTotal ? ' / ' + total : '' %>
+                </span>
+              </td>
+
+              <td class="pe-3 text-center">
+                <a href="/books/<%= book.book_id %>" class="btn btn-outline-secondary btn-sm">View</a>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-5">
+              <div class="fw-semibold mb-1">No books found</div>
+              <div class="text-secondary small">The catalog is currently empty.</div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Stock legend -->
+  <div class="d-flex flex-wrap gap-3 mt-3 small text-secondary">
+    <span>
+      <span class="badge rounded-pill text-bg-success">2 / 5</span>
+      Available / total copies
+    </span>
+    <span>
+      <span class="badge rounded-pill text-bg-danger">0 / 5</span>
+      All copies issued
+    </span>
+  </div>
+</div>

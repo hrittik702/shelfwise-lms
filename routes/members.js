@@ -8,14 +8,14 @@ router.get(
   wrapAsync(async (req, res) => {
     const sql = 'SELECT * from members';
     const [members] = await db.query(sql);
-    res.render('members.ejs', { members });
+    res.render('members/members.ejs', { members });
   })
 );
 
 router.get(
   '/new',
   wrapAsync(async (req, res) => {
-    res.render('member_new.ejs');
+    res.render('members/new.ejs');
   })
 );
 
@@ -35,7 +35,7 @@ router.get(
     const member_id = req.params.member_id;
     const sql = `select * from members where member_id = ?`;
     const [rows] = await db.query(sql, [member_id]);
-    res.render('member_view.ejs', { member: rows[0] });
+    res.render('members/view.ejs', { member: rows[0] });
   })
 );
 
@@ -45,7 +45,7 @@ router.get(
     const member_id = req.params.member_id;
     const sql = `select * from members where member_id = ?`;
     const [rows] = await db.query(sql, [member_id]);
-    res.render('member_update.ejs', { member: rows[0] });
+    res.render('members/update.ejs', { member: rows[0] });
   })
 );
 

@@ -9,7 +9,7 @@ router.get(
   wrapAsync(async (req, res) => {
     const sql = `SELECT * from book_details`;
     const [books] = await db.query(sql);
-    res.render('books.ejs', { books });
+    res.render('books/books.ejs', { books });
   })
 );
 
@@ -21,7 +21,7 @@ router.get(
        FROM category
        ORDER BY category_name`
     );
-    res.render('book_new.ejs', { categories });
+    res.render('books/new.ejs', { categories });
   })
 );
 
@@ -34,7 +34,7 @@ router.get(
     if (!book) {
       return res.status(404).send('Book not found');
     }
-    res.render('single_book.ejs', { book });
+    res.render('books/view.ejs', { book });
   })
 );
 
@@ -64,7 +64,7 @@ router.get(
        ORDER BY category_name`
       );
       // 3. Pass both datasets to EJS
-      res.render('book_update.ejs', {
+      res.render('books/update.ejs', {
         book,
         categories,
       });
