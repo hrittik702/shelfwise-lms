@@ -1,4 +1,234 @@
 <% layout("/layout/boilerplate") %>
-<div>
-  <h1>Hrittik</h1>
+
+<div class="shelfwise-hub container py-4 py-lg-5">
+  <!-- Dashboard heading -->
+  <section class="hub-hero mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+      <div class="d-flex align-items-center gap-3">
+        <img src="/assets/logo.png" alt="ShelfWise" width="68" height="68" class="hub-logo" />
+
+        <div>
+          <p class="hub-eyebrow mb-2">LIBRARY WORKSPACE</p>
+          <h1 class="h2 fw-bold mb-2">Library Operations</h1>
+          <p class="text-secondary mb-0">
+            Manage books, members, circulation, and fines from one place.
+          </p>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <a href="/books" class="btn btn-outline-success">
+          <i class="bi bi-search me-2"></i>
+          Browse Catalog
+        </a>
+
+        <a href="/books/new" class="btn btn-success">
+          <i class="bi bi-plus-lg me-2"></i>
+          Add Book
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Frequently used operations -->
+  <section class="mb-5">
+    <div class="hub-section-heading mb-3">
+      <div>
+        <h2 class="h5 fw-bold mb-1">Quick Actions</h2>
+        <p class="text-secondary small mb-0">Shortcuts for everyday library operations.</p>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Issue book -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <a href="/circulation/issue" class="hub-action-card h-100">
+          <div class="hub-action-icon">
+            <i class="bi bi-book-half"></i>
+          </div>
+
+          <h3 class="h6 fw-bold mb-2">Issue a Book</h3>
+          <p class="small text-secondary mb-3">Register a new loan for an eligible member.</p>
+
+          <span class="hub-card-link">
+            Start issuing
+            <i class="bi bi-arrow-up-right ms-1"></i>
+          </span>
+        </a>
+      </div>
+
+      <!-- Return book -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <a href="/circulation/return" class="hub-action-card h-100">
+          <div class="hub-action-icon">
+            <i class="bi bi-arrow-return-left"></i>
+          </div>
+
+          <h3 class="h6 fw-bold mb-2">Return a Book</h3>
+          <p class="small text-secondary mb-3">Process a return and calculate any overdue fine.</p>
+
+          <span class="hub-card-link">
+            Process return
+            <i class="bi bi-arrow-up-right ms-1"></i>
+          </span>
+        </a>
+      </div>
+
+      <!-- Current loans -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <a href="/issues/current" class="hub-action-card h-100">
+          <div class="hub-action-icon">
+            <i class="bi bi-arrow-left-right"></i>
+          </div>
+
+          <h3 class="h6 fw-bold mb-2">Current Loans</h3>
+          <p class="small text-secondary mb-3">View books that are currently issued to members.</p>
+
+          <span class="hub-card-link">
+            View issued books
+            <i class="bi bi-arrow-up-right ms-1"></i>
+          </span>
+        </a>
+      </div>
+
+      <!-- Overdue loans -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <a href="/issues/overdue" class="hub-action-card hub-action-card-alert h-100">
+          <div class="hub-action-icon hub-action-icon-gold">
+            <i class="bi bi-calendar2-week"></i>
+          </div>
+
+          <h3 class="h6 fw-bold mb-2">Overdue Books</h3>
+          <p class="small text-secondary mb-3">
+            Review late loans and check their overdue duration.
+          </p>
+
+          <span class="hub-card-link">
+            Review overdue loans
+            <i class="bi bi-arrow-up-right ms-1"></i>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Management sections -->
+  <section class="mb-5">
+    <div class="hub-section-heading mb-3">
+      <div>
+        <h2 class="h5 fw-bold mb-1">Manage Your Library</h2>
+        <p class="text-secondary small mb-0">
+          Access the catalog, member records, and financial records.
+        </p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Catalog management -->
+      <div class="col-12 col-lg-4">
+        <div class="hub-management-panel h-100">
+          <div class="hub-panel-heading">
+            <div class="hub-action-icon">
+              <i class="bi bi-collection"></i>
+            </div>
+
+            <div>
+              <h3 class="h6 fw-bold mb-1">Catalog & Inventory</h3>
+              <p class="small text-secondary mb-0">Book records and availability.</p>
+            </div>
+          </div>
+
+          <div class="hub-link-list">
+            <a href="/books" class="hub-list-link">
+              <span>
+                <i class="bi bi-book me-2"></i>
+                View and Search Books
+              </span>
+              <i class="bi bi-chevron-right"></i>
+            </a>
+
+            <a href="/books/new" class="hub-list-link">
+              <span>
+                <i class="bi bi-plus-circle me-2"></i>
+                Add New Book
+              </span>
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Member management -->
+      <div class="col-12 col-lg-4">
+        <div class="hub-management-panel h-100">
+          <div class="hub-panel-heading">
+            <div class="hub-action-icon">
+              <i class="bi bi-people"></i>
+            </div>
+
+            <div>
+              <h3 class="h6 fw-bold mb-1">Member Management</h3>
+              <p class="small text-secondary mb-0">Student and faculty records.</p>
+            </div>
+          </div>
+
+          <div class="hub-link-list">
+            <a href="/members" class="hub-list-link">
+              <span>
+                <i class="bi bi-person-lines-fill me-2"></i>
+                View Members
+              </span>
+              <i class="bi bi-chevron-right"></i>
+            </a>
+
+            <a href="/members/new" class="hub-list-link">
+              <span>
+                <i class="bi bi-person-plus me-2"></i>
+                Register Member
+              </span>
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fine management -->
+      <div class="col-12 col-lg-4">
+        <div class="hub-management-panel h-100">
+          <div class="hub-panel-heading">
+            <div class="hub-action-icon hub-action-icon-gold">
+              <i class="bi bi-wallet2"></i>
+            </div>
+
+            <div>
+              <h3 class="h6 fw-bold mb-1">Fine Management</h3>
+              <p class="small text-secondary mb-0">Overdue charges and payment status.</p>
+            </div>
+          </div>
+
+          <div class="hub-link-list">
+            <a href="/fines" class="hub-list-link">
+              <span>
+                <i class="bi bi-receipt me-2"></i>
+                View Fine Records
+              </span>
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Small footer note -->
+  <section class="hub-bottom-note">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+      <p class="small mb-0">
+        <i class="bi bi-shield-check me-2"></i>
+        ShelfWise Library Administration
+      </p>
+
+      <p class="small text-secondary mb-0">Select an operation to get started.</p>
+    </div>
+  </section>
 </div>
