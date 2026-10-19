@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const port = process.env.port | 4000;
+const port = process.env.PORT || 4000; //fix 1.2.1 & .2
 const path = require('path');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
@@ -55,6 +55,8 @@ app.use(
     },
   })
 );
+
+// middlewares
 
 const db = pool.promise();
 db.getConnection()
@@ -112,21 +114,67 @@ app.post('/login', async (req, res) => {
       return res.status(401).send('Invalid username or password');
     }
     // Success!
-    res.status(200).send('Login successful!');
+    res.redirect('/');
   } catch (err) {
     console.error(err);
     res.status(500).send('An error Occurred during login');
   }
 });
 
-app.get('/users', async (req, res) => {
+app.get('/books', async (req, res) => {
+  const sql = `SELECT * from book_details`;
+  const [books] = await db.query(sql);
+  // console.log(books);
+  res.render('books.ejs', { books });
+});
+
+app.get('/books/:book_id', async (req, res) => {
+  const sql = `SELECT * FROM book_details WHERE book_id = ?`;
+  const [rows] = await db.query(sql, [req.params.book_id]);
+  const book = rows[0];
+  if (!book) {
+    return res.status(404).send('Book not found');
+  }
+  res.render('single_book.ejs', { book });
+});
+
+app.get('/books/:book_id/update', async (req, res) => {
   try {
-    // Run your SQL query using await
-    const [rows] = await db.query('SELECT * FROM users');
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Database query failed' });
+    const bookId = Number(req.params.book_id);
+
+    if (!Number.isSafeInteger(bookId) || bookId <= 0) {
+      return res.status(400).send('Invalid book ID');
+    }
+
+    // 1. Fetch the selected book
+    const [bookRows] = await db.query(
+      `SELECT *
+       FROM books
+       WHERE book_id = ?`,
+      [bookId]
+    );
+
+    if (bookRows.length === 0) {
+      return res.status(404).send('Book not found');
+    }
+
+    const book = bookRows[0];
+
+    // 2. Fetch all categories from the separate category table
+    const [categories] = await db.query(
+      `SELECT category_id, category_name
+       FROM category
+       ORDER BY category_name`
+    );
+
+    // 3. Pass both datasets to EJS
+    res.render('book_update.ejs', {
+      book,
+      categories,
+    });
+  } catch (err) {
+    console.error('Error loading update form:', err);
+    res.status(500).send('Unable to load the update form');
   }
 });
 

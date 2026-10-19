@@ -1,0 +1,230 @@
+<% layout('/layout/boilerplate') %>
+
+<div class="container py-4 py-lg-5">
+
+  <!-- Back navigation -->
+  <div class="mb-4">
+    <a
+      href="/books/<%= book.book_id %>"
+      class="btn btn-outline-secondary btn-sm"
+    >
+      <span aria-hidden="true">&larr;</span>
+      Back to Book Details
+    </a>
+  </div>
+
+  <!-- Update form card -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+    <!-- Heading -->
+    <div class="card-header bg-white border-bottom p-4">
+      <h1 class="h3 fw-bold mb-2">Update Book</h1>
+
+      <p class="text-secondary mb-0">
+        Update the information for this library book.
+      </p>
+    </div>
+
+    <!-- Form -->
+    <div class="card-body p-4">
+
+      <form
+        action="/books/<%= book.book_id %>/update"
+        method="POST"
+      >
+
+        <!-- ISBN -->
+        <div class="mb-4">
+          <label for="isbn" class="form-label fw-semibold">
+            ISBN
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            id="isbn"
+            name="isbn"
+            value="<%= book.isbn %>"
+            minlength="13"
+            maxlength="13"
+            pattern="[0-9]{13}"
+            inputmode="numeric"
+            title="Enter exactly 13 numeric digits."
+            required
+          >
+
+          <div class="form-text">
+            Enter exactly 13 digits according to the current schema.
+          </div>
+        </div>
+
+        <!-- Book title -->
+        <div class="mb-4">
+          <label for="title" class="form-label fw-semibold">
+            Book Title
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            id="title"
+            name="title"
+            value="<%= book.title %>"
+            maxlength="50"
+            required
+          >
+        </div>
+
+        <!-- Author and Publisher -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-12 col-md-6">
+            <label for="author" class="form-label fw-semibold">
+              Author
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="author"
+              name="author"
+              value="<%= book.author %>"
+              maxlength="30"
+              required
+            >
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="publisher" class="form-label fw-semibold">
+              Publisher
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="publisher"
+              name="publisher"
+              value="<%= book.publisher || '' %>"
+              maxlength="30"
+            >
+          </div>
+
+        </div>
+
+        <!-- Publication year and category -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-12 col-md-6">
+            <label for="pub_year" class="form-label fw-semibold">
+              Publication Year
+            </label>
+
+            <input
+              type="number"
+              class="form-control"
+              id="pub_year"
+              name="pub_year"
+              value="<%= book.pub_year %>"
+              min="1901"
+              max="2155"
+              required
+            >
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="category_id" class="form-label fw-semibold">
+              Category
+            </label>
+
+            <select
+              class="form-select"
+              id="category_id"
+              name="category_id"
+              required
+            >
+              <% categories.forEach(category => { %>
+
+                <option
+                  value="<%= category.category_id %>"
+                  <%= String(category.category_id) === String(book.category_id)
+                      ? 'selected'
+                      : '' %>
+                >
+                  <%= category.category_name %>
+                </option>
+
+              <% }) %>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Copy information -->
+        <div class="border rounded-3 p-3 mb-4">
+
+          <h2 class="h6 fw-bold mb-3">Inventory Information</h2>
+
+          <div class="row g-3">
+
+            <div class="col-12 col-md-6">
+              <label for="total_copies" class="form-label fw-semibold">
+                Total Copies
+              </label>
+
+              <input
+                type="number"
+                class="form-control"
+                id="total_copies"
+                name="total_copies"
+                value="<%= book.total_copies %>"
+                min="0"
+                step="1"
+                required
+              >
+
+              <div class="form-text">
+                Cannot be lower than the number of copies currently on loan.
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">
+                Currently Available
+              </label>
+
+              <div class="form-control bg-light" aria-readonly="true">
+                <%= book.available_copies %> copies
+              </div>
+
+              <div class="form-text">
+                Managed by the issue and return operations.
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Form actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+
+          <a
+            href="/books/<%= book.book_id %>"
+            class="btn btn-outline-secondary"
+          >
+            Cancel
+          </a>
+
+          <button type="submit" class="btn btn-success px-4">
+            Update Book
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
