@@ -1,0 +1,186 @@
+<% layout("/layout/boilerplate") %>
+<div class="container py-4 py-lg-5">
+  <!-- Page Header -->
+  <div class="mb-4">
+    <a href="/books" class="btn btn-outline-success btn-sm mb-3">
+      <i class="bi bi-arrow-left me-2"></i>
+      Back to Book Catalog
+    </a>
+    <h1 class="h3 fw-bold mb-2">Add New Book</h1>
+    <p class="text-secondary mb-0">
+      Enter the book details to add it to the library catalog.
+    </p>
+  </div>
+
+  <!-- Add Book Form -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white border-bottom p-4">
+      <h2 class="h5 fw-bold mb-1">Book Information</h2>
+      <p class="text-secondary small mb-0">
+        Fields marked with * are required.
+      </p>
+    </div>
+    <div class="card-body p-4">
+      <form action="/books" method="POST">
+        <!-- ISBN -->
+        <div class="mb-4">
+          <label for="isbn" class="form-label fw-semibold">ISBN *</label>
+          <input
+            type="text"
+            class="form-control"
+            id="isbn"
+            name="isbn"
+            placeholder="Enter 13-digit ISBN"
+            minlength="13"
+            maxlength="13"
+            pattern="[0-9]{13}"
+            inputmode="numeric"
+            title="ISBN must contain exactly 13 digits."
+            required
+          >
+        </div>
+
+        <!-- Title -->
+        <div class="mb-4">
+          <label for="title" class="form-label fw-semibold">Book Title *</label>
+          <input
+            type="text"
+            class="form-control"
+            id="title"
+            name="title"
+            placeholder="Enter book title"
+            maxlength="50"
+            required
+          >
+        </div>
+
+        <!-- Author and Publisher -->
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-md-6">
+            <label for="author" class="form-label fw-semibold">Author *</label>
+            <input
+              type="text"
+              class="form-control"
+              id="author"
+              name="author"
+              placeholder="Enter author name"
+              maxlength="30"
+              required
+            >
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="publisher" class="form-label fw-semibold">
+              Publisher
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="publisher"
+              name="publisher"
+              placeholder="Enter publisher name"
+              maxlength="30"
+            >
+          </div>
+
+        </div>
+
+        <!-- Publication Year and Category -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-12 col-md-6">
+            <label for="pub_year" class="form-label fw-semibold">
+              Publication Year *
+            </label>
+
+            <input
+              type="number"
+              class="form-control"
+              id="pub_year"
+              name="pub_year"
+              min="1901"
+              max="2155"
+              step="1"
+              placeholder="e.g. 2024"
+              required
+            >
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="category_id" class="form-label fw-semibold">
+              Category *
+            </label>
+
+            <select
+              class="form-select"
+              id="category_id"
+              name="category_id"
+              required
+            >
+              <option value="" selected disabled>
+                Select a category
+              </option>
+
+              <% categories.forEach(category => { %>
+                <option value="<%= category.category_id %>">
+                  <%= category.category_name %>
+                </option>
+              <% }) %>
+
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Inventory -->
+        <div class="border rounded-3 p-3 mb-4">
+
+          <h2 class="h6 fw-bold mb-3">
+            <i class="bi bi-box-seam me-2"></i>
+            Inventory Information
+          </h2>
+
+          <div class="mb-2">
+            <label for="total_copies" class="form-label fw-semibold">
+              Total Copies *
+            </label>
+
+            <input
+              type="number"
+              class="form-control"
+              id="total_copies"
+              name="total_copies"
+              min="0"
+              step="1"
+              value="1"
+              required
+            >
+
+            <div class="form-text">
+              All copies will initially be available for borrowing.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+
+          <a href="/books" class="btn btn-outline-secondary px-4">
+            Cancel
+          </a>
+
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-plus-lg me-2"></i>
+            Add Book
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>

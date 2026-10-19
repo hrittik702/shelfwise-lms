@@ -128,6 +128,15 @@ app.get('/books', async (req, res) => {
   res.render('books.ejs', { books });
 });
 
+app.get('/books/new', async (req, res) => {
+  const [categories] = await db.query(
+    `SELECT category_id, category_name
+       FROM category
+       ORDER BY category_name`
+  );
+  res.render('book_new.ejs', { categories });
+});
+
 app.get('/books/:book_id', async (req, res) => {
   const sql = `SELECT * FROM book_details WHERE book_id = ?`;
   const [rows] = await db.query(sql, [req.params.book_id]);
@@ -176,6 +185,52 @@ app.get('/books/:book_id/update', async (req, res) => {
     console.error('Error loading update form:', err);
     res.status(500).send('Unable to load the update form');
   }
+});
+
+app.get('/books/:book_id/delete', async (req, res) => {
+  const book_id = req.params.book_id;
+  const sql = `delete from books where book_id = ?`;
+  await db.query(sql, [book_id]);
+  res.redirect('/books');
+});
+
+app.post('/books/:book_id/update', async (req, res) => {
+  const book_id = req.params.book_id;
+  const sql = `UPDATE books SET isbn = ?, title = ?, author = ?, publisher = ?, pub_year = ?, category_id = ?, total_copies = ?, available_copies = ? where book_id = ?`;
+  const { isbn, title, author, publisher, pub_year, category_id, total_copies, available_copies } =
+    req.body;
+  await db.query(sql, [
+    isbn,
+    title,
+    author,
+    publisher,
+    pub_year,
+    category_id,
+    total_copies,
+    available_copies < total_copies ? available_copies : total_copies,
+    book_id,
+  ]);
+  console.log('Book Update');
+  res.redirect(`/books/${book_id}`);
+});
+
+app.post('/books', async (req, res) => {
+  const { isbn, title, author, publisher, pub_year, category_id, total_copies } = req.body;
+  const sql = `insert into books (isbn,title,author,publisher,pub_year,category_id,total_copies,available_copies)  values(?,?,?,?,?,?,?,?)`;
+  //for new books
+  //available copies = total copies
+  const insert_book = await db.query(sql, [
+    isbn,
+    title,
+    author,
+    publisher,
+    pub_year,
+    category_id,
+    total_copies,
+    total_copies,
+  ]);
+  console.log(insert_book);
+  res.redirect('/books');
 });
 
 app.get('/', (req, res) => {
