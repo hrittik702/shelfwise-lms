@@ -233,6 +233,57 @@ app.post('/books', async (req, res) => {
   res.redirect('/books');
 });
 
+// members routes
+app.get('/members/new', (req, res) => {
+  res.render('member_new.ejs');
+});
+
+app.post('/members', async (req, res) => {
+  const { name, email, phone, member_type } = req.body;
+  const sql = `INSERT INTO members (name,email,phone,member_type,join_date,status) values (?,?,?,?,CURDATE(),"active")`;
+  await db.query(sql, [name, email, phone, member_type]);
+  res.redirect('/members');
+});
+
+app.get('/members', async (req, res) => {
+  const sql = 'SELECT * from members';
+  const [members] = await db.query(sql);
+  console.log(members);
+  res.render('members.ejs', { members });
+});
+
+app.get('/members/:member_id', async (req, res) => {
+  const member_id = req.params.member_id;
+  const sql = `select * from members where member_id = ?`;
+  const [rows] = await db.query(sql, [member_id]);
+  console.log({ member: rows[0] });
+  res.render('member_view.ejs', { member: rows[0] });
+});
+
+app.get('/members/:member_id/update', async (req, res) => {
+  const member_id = req.params.member_id;
+  const sql = `select * from members where member_id = ?`;
+  const [rows] = await db.query(sql, [member_id]);
+  console.log({ member: rows[0] });
+  res.render('member_update.ejs', { member: rows[0] });
+});
+
+app.post('/members/:member_id/update', async (req, res) => {
+  const member_id = req.params.member_id;
+  const sql = `update members set name = ?, email = ?, phone =?, member_type = ?,status = ? WHERE member_id = ?`;
+  const { name, email, phone, member_type, status } = req.body;
+  const result = await db.query(sql, [name, email, phone, member_type, status, member_id]);
+  console.log(result);
+  res.redirect(`/members/${member_type}`);
+});
+
+app.post('/members/:member_id/delete', async (req, res) => {
+  const member_id = req.params.member_id;
+  const sql = `delete from members where member_id = ?`;
+  await db.query(sql, [member_id]);
+  res.redirect('/members');
+});
+
 app.get('/', (req, res) => {
   res.render('./index.ejs');
 });

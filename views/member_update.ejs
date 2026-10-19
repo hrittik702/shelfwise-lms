@@ -1,0 +1,215 @@
+<% layout('/layout/boilerplate') %>
+
+<div class="container py-4 py-lg-5">
+
+
+  <%
+    const fmt = (d) => d
+      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+  %>
+
+  <!-- Back navigation -->
+  <div class="mb-4">
+    <a
+      href="/members/<%= member.member_id %>"
+      class="btn btn-outline-secondary btn-sm"
+    >
+      <span aria-hidden="true">&larr;</span>
+      Back to Member Details
+    </a>
+  </div>
+
+  <!-- Update form card -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+    <!-- Heading -->
+    <div class="card-header bg-white border-bottom p-4">
+      <h1 class="h3 fw-bold mb-2">Update Member</h1>
+
+      <p class="text-secondary mb-0">
+        Update the information for this library member.
+      </p>
+    </div>
+
+    <!-- Form -->
+    <div class="card-body p-4">
+
+      <form
+        action="/members/<%= member.member_id %>/update"
+        method="POST"
+      >
+
+        <!-- Name -->
+        <div class="mb-4">
+          <label for="name" class="form-label fw-semibold">
+            Full Name
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            name="name"
+            value="<%= member.name %>"
+            maxlength="30"
+            required
+          >
+        </div>
+
+        <!-- Email and Phone -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-12 col-md-6">
+            <label for="email" class="form-label fw-semibold">
+              Email
+            </label>
+
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              name="email"
+              value="<%= member.email || '' %>"
+              maxlength="40"
+              required
+            >
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="phone" class="form-label fw-semibold">
+              Phone
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="phone"
+              name="phone"
+              value="<%= member.phone || '' %>"
+              minlength="10"
+              maxlength="10"
+              pattern="[0-9]{10}"
+              inputmode="numeric"
+              title="Enter exactly 10 numeric digits."
+              required
+            >
+
+            <div class="form-text">
+              Enter exactly 10 digits.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Member type and status -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-12 col-md-6">
+            <label for="member_type" class="form-label fw-semibold">
+              Member Type
+            </label>
+
+            <select
+              class="form-select"
+              id="member_type"
+              name="member_type"
+              required
+            >
+              <option value="student" <%= member.member_type === 'student' ? 'selected' : '' %>>
+                Student
+              </option>
+              <option value="faculty" <%= member.member_type === 'faculty' ? 'selected' : '' %>>
+                Faculty
+              </option>
+            </select>
+
+            <div class="form-text">
+              Students can hold 3 books, faculty 5.
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="status" class="form-label fw-semibold">
+              Status
+            </label>
+
+            <select
+              class="form-select"
+              id="status"
+              name="status"
+              required
+            >
+              <option value="active" <%= member.status === 'active' ? 'selected' : '' %>>
+                Active
+              </option>
+              <option value="suspended" <%= member.status === 'suspended' ? 'selected' : '' %>>
+                Suspended
+              </option>
+            </select>
+
+            <div class="form-text">
+              Suspended members cannot borrow books.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Read-only information -->
+        <div class="border rounded-3 p-3 mb-4">
+
+          <h2 class="h6 fw-bold mb-3">Record Information</h2>
+
+          <div class="row g-3">
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">
+                Member ID
+              </label>
+
+              <div class="form-control bg-light" aria-readonly="true">
+                <%= member.member_id %>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">
+                Join Date
+              </label>
+
+              <div class="form-control bg-light" aria-readonly="true">
+                <%= fmt(member.join_date) %>
+              </div>
+
+              <div class="form-text">
+                Set when the member is registered and not editable.
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Form actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+
+          <a
+            href="/members/<%= member.member_id %>"
+            class="btn btn-outline-secondary"
+          >
+            Cancel
+          </a>
+
+          <button type="submit" class="btn btn-success px-4">
+            Update Member
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
