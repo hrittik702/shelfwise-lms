@@ -1,61 +1,97 @@
 const express = require('express');
-const router = express.Router({ mergeParams: true });
-const wrapAsync = require('../utils/wrapAsync.js');
-const db = require('../config/db.js');
+const router = express.Router();
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
+const wrapAsync = require('../utils/wrapAsync.js');
+const requireAuth = require('./auth.js');
+const db = require('../config/db.js');
+
+const SALT_ROUNDS = 10;
 
 router.get('/login', (req, res) => {
+  if (req.session.staffId) return res.redirect('/');
   res.render('staff/login.ejs');
 });
 
 router.post(
   '/login',
   wrapAsync(async (req, res) => {
-    // const salt = bcrypt.genSaltSync(saltRounds);
-    try {
-      const { username, password } = req.body;
-      const sql = `Select password from staff where username=?`;
-      const [[staff]] = await db.query(sql, [username]);
-      if (staff == undefined) {
-        return res.status(401).send(`No Staff found with username : ${username}`);
-      }
-      const isMatched = await bcrypt.compare(password, staff.password);
-      if (!isMatched) {
-        return res.status(401).send('Invalid username or password');
-      }
-      // Success!
-      res.redirect('/');
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('An error Occurred during login');
+    const { username, password } = req.body;
+    if (!username || !password) {
+      req.flash('error', 'Username and password are required.');
+      return res.redirect('/staff/login');
     }
+
+    const [rows] = await db.query('SELECT staff_id, name, password FROM staff WHERE username = ?', [
+      username,
+    ]);
+    const staff = rows[0];
+
+    // same message for unknown user and wrong password
+    const ok = staff && (await bcrypt.compare(password, staff.password));
+    if (!ok) {
+      req.flash('error', 'Invalid username or password.');
+      return res.redirect('/staff/login');
+    }
+
+    // new session ID after login (prevents session fixation)
+    await new Promise((resolve, reject) =>
+      req.session.regenerate((err) => (err ? reject(err) : resolve()))
+    );
+    req.session.staffId = staff.staff_id;
+    req.session.staffName = staff.name;
+    await new Promise((resolve, reject) =>
+      req.session.save((err) => (err ? reject(err) : resolve()))
+    );
+
+    req.flash('success', `Welcome, ${staff.name}.`);
+    res.redirect('/');
   })
 );
 
-router.get('/signup', (req, res) => {
+// only a logged-in staff member can create another staff account
+router.get('/signup', requireAuth, (req, res) => {
   res.render('staff/signup.ejs');
 });
 
 router.post(
   '/signup',
+  requireAuth,
   wrapAsync(async (req, res) => {
-    // const salt = bcrypt.genSaltSync(saltRounds);
-    // console.log(bcrypt.hashSync(req.body.password, salt));
-    bcrypt.genSalt(saltRounds, function (err, salt) {
-      bcrypt.hash(req.body.password, salt, function (err, hash) {
-        const sql = `INSERT INTO staff(name,username,password) values (?,?,?)`;
-        const result = db.query(sql, [req.body.name, req.body.username, hash], (err, res) => {
-          if (err) {
-            console.log(err);
-            return res.status(500).send('Error Saving staff');
-          }
-        });
-        console.log('Query OK, Insert ID : ', result.insertId);
-        res.status(200).send('Staff added successfully');
-      });
-    });
+    const name = (req.body.name || '').trim();
+    const username = (req.body.username || '').trim();
+    const password = req.body.password || '';
+
+    if (!name || !username || password.length < 8) {
+      req.flash('error', 'Name, username and a password of at least 8 characters are required.');
+      return res.redirect('/staff/signup');
+    }
+
+    const hash = await bcrypt.hash(password, SALT_ROUNDS);
+    try {
+      await db.query('INSERT INTO staff (name, username, password) VALUES (?, ?, ?)', [
+        name,
+        username,
+        hash,
+      ]);
+    } catch (err) {
+      if (err.code === 'ER_DUP_ENTRY') {
+        req.flash('error', 'That username already exists.');
+        return res.redirect('/staff/signup');
+      }
+      throw err;
+    }
+
+    req.flash('success', 'Staff account created.');
+    res.redirect('/');
   })
 );
+
+router.post('/logout', (req, res, next) => {
+  req.session.destroy((err) => {
+    if (err) return next(err);
+    res.clearCookie('lms-cookie');
+    res.redirect('/staff/login');
+  });
+});
 
 module.exports = router;
