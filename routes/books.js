@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const wrapAsync = require('../utils/wrapAsync.js');
 const db = require('../config/db.js');
+const { resolve } = require('path');
 
-// View Books Route
+// View All Books
 router.get(
   '/',
   wrapAsync(async (req, res) => {
@@ -13,6 +14,7 @@ router.get(
   })
 );
 
+// Add new Book
 router.get(
   '/new',
   wrapAsync(async (req, res) => {
@@ -25,6 +27,7 @@ router.get(
   })
 );
 
+// view single book
 router.get(
   '/:book_id',
   wrapAsync(async (req, res) => {
@@ -38,6 +41,7 @@ router.get(
   })
 );
 
+// Book update.ejs
 router.get(
   '/:book_id/update',
   wrapAsync(async (req, res) => {
@@ -75,8 +79,9 @@ router.get(
   })
 );
 
+// -[ ] : Error -> Delete must be method override or POST
 router.get(
-  ':book_id/delete',
+  '/:book_id/delete',
   wrapAsync(async (req, res) => {
     const book_id = req.params.book_id;
     const sql = `delete from books where book_id = ?`;
@@ -85,21 +90,22 @@ router.get(
   })
 );
 
+// Book Update
 router.post(
   '/:book_id/update',
   wrapAsync(async (req, res) => {
     const book_id = req.params.book_id;
+    const { isbn, title, author, publisher, pub_year, category_id, total_copies } = req.body;
+    const [issuedRows] = await db.query(
+      'SELECT count(*) as active FROM issue where book_id = ? AND return_date is null',
+      [book_id]
+    );
+    if (!issuedRows[0]) {
+      req.flash('error', 'No Active Loans');
+    }
+    const activeLoans = issuedRows[0].active;
+    const newAvailable = Math.max(0, Number(total_copies) - activeLoans);
     const sql = `UPDATE books SET isbn = ?, title = ?, author = ?, publisher = ?, pub_year = ?, category_id = ?, total_copies = ?, available_copies = ? where book_id = ?`;
-    const {
-      isbn,
-      title,
-      author,
-      publisher,
-      pub_year,
-      category_id,
-      total_copies,
-      available_copies,
-    } = req.body;
     await db.query(sql, [
       isbn,
       title,
@@ -108,27 +114,36 @@ router.post(
       pub_year,
       category_id,
       total_copies,
-      available_copies < total_copies ? available_copies : total_copies,
+      newAvailable,
       book_id,
     ]);
+    req.flash('success', `Book info updated Successfully!`);
     res.redirect(`/books/${book_id}`);
   })
 );
 
+// Add new Book
 router.post(
   '/',
   wrapAsync(async (req, res) => {
-    const { isbn, title, author, publisher, pub_year, category_id, total_copies } = req.body;
+    const { isbn, title, author, publisher, pub_year, total_copies } = req.body;
+    let resolvedCategoryId = req.body.category_id;
+    console.log(resolvedCategoryId);
+    if (resolvedCategoryId === 'other' && req.body.new_category_name) {
+      const [categoryResult] = await db.query(`INSERT INTO category (category_name) values (?)`, [
+        req.body.new_category_name.trim(),
+      ]);
+      resolvedCategoryId = categoryResult.insertId;
+      console.log(resolvedCategoryId);
+    }
     const sql = `insert into books (isbn,title,author,publisher,pub_year,category_id,total_copies,available_copies)  values(?,?,?,?,?,?,?,?)`;
-    //for new books
-    //available copies = total copies
     const insert_book = await db.query(sql, [
       isbn,
       title,
       author,
       publisher,
       pub_year,
-      category_id,
+      resolvedCategoryId,
       total_copies,
       total_copies,
     ]);

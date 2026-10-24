@@ -1,1 +1,94 @@
-<%- include('../includes/error.ejs') %>
+<%
+  const flashTypes = [
+  { list: typeof success !== 'undefined' ? success : [], cls: 'success', label: 'Success' },
+  { list: typeof error   !== 'undefined' ? error   : [], cls: 'danger',  label: 'Error' },
+  { list: typeof warning !== 'undefined' ? warning : [], cls: 'warning', label: 'Warning' },
+  { list: typeof info    !== 'undefined' ? info    : [], cls: 'info',    label: 'Notice' }
+];
+  const hasFlash = flashTypes.some((t) => t.list && t.list.length > 0);
+%>
+
+<% if (hasFlash) { %>
+  <style>
+    .sw-flash-stack {
+      position: fixed;
+      top: 4.5rem;                 /* just below the navbar; adjust to your navbar height */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1080;
+      width: min(92vw, 520px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;        /* clicks pass through the empty area */
+    }
+    .sw-flash {
+      pointer-events: auto;
+      margin: 0;
+      padding-right: 2.5rem;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      animation: sw-flash-in 0.3s ease;
+    }
+    .sw-flash.sw-flash-hide {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+    @keyframes sw-flash-in {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <div class="sw-flash-stack" id="swFlashStack" aria-live="polite">
+    <% flashTypes.forEach((type) => { %>
+      <% if (type.list && type.list.length > 0) { %>
+        <% type.list.forEach((message) => { %>
+          <div class="alert alert-<%= type.cls %> shadow position-relative sw-flash"
+               role="<%= type.cls === 'danger' ? 'alert' : 'status' %>"
+               data-duration="4000">
+            <%= message %>
+            <button type="button" class="btn-close position-absolute top-50 end-0 translate-middle-y me-3"
+                    aria-label="Close"></button>
+          </div>
+        <% }) %>
+      <% } %>
+    <% }) %>
+  </div>
+
+  <script>
+    (function () {
+      const stack = document.getElementById('swFlashStack');
+      if (!stack) return;
+
+      function remove(el) {
+        if (!el.parentNode) return;
+        el.remove();
+        if (!stack.querySelector('.sw-flash')) stack.remove();
+      }
+
+      function hide(el) {
+        if (el.classList.contains('sw-flash-hide')) return;
+        el.classList.add('sw-flash-hide');
+        setTimeout(function () { remove(el); }, 400);
+      }
+
+      stack.querySelectorAll('.sw-flash').forEach(function (el) {
+        const duration = Number(el.dataset.duration) || 4000;
+        let timer = setTimeout(function () { hide(el); }, duration);
+
+        // pause auto-hide while the mouse is over the message
+        el.addEventListener('mouseenter', function () { clearTimeout(timer); });
+        el.addEventListener('mouseleave', function () {
+          timer = setTimeout(function () { hide(el); }, 1500);
+        });
+
+        el.querySelector('.btn-close').addEventListener('click', function () {
+          clearTimeout(timer);
+          hide(el);
+        });
+      });
+    })();
+  </script>
+<% } %>

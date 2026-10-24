@@ -1,4 +1,3 @@
-// ---------- imports ----------
 require('dotenv').config();
 if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET is missing in .env');
@@ -10,6 +9,7 @@ const ejsMate = require('ejs-mate');
 const session = require('express-session');
 const MySQLStoreFactory = require('express-mysql-session');
 const flash = require('connect-flash');
+const ExpressError = require('./utils/expressError.js');
 
 const db = require('./config/db.js');
 const requireAuth = require('./routes/auth.js');
@@ -21,16 +21,17 @@ const circulationRouter = require('./routes/circulation.js');
 const app = express();
 const port = process.env.PORT || 4000;
 
-// ---------- view engine and body parsing ----------
+// View engine setting
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
 
-// ---------- database check ----------
+// Database connection
 db.getConnection()
   .then((connection) => {
     console.log('Connected to the MySQL database.');
@@ -40,7 +41,7 @@ db.getConnection()
     console.error('Database connection failed:', err.message);
   });
 
-// ---------- sessions (must come before flash) ----------
+// session management
 const MySQLStore = MySQLStoreFactory(session);
 const sessionStore = new MySQLStore({}, db.pool);
 
@@ -55,12 +56,12 @@ app.use(
       maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
       sameSite: 'lax',
-      secure: false, // set true only when served over HTTPS
+      secure: false,
     },
   })
 );
 
-// ---------- flash and template locals ----------
+// Flash messages
 app.use(flash());
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
@@ -70,15 +71,19 @@ app.use((req, res, next) => {
   res.locals.currUser = req.session.staffId
     ? { id: req.session.staffId, name: req.session.staffName }
     : null;
+  res.locals.locals = res.locals;
   next();
 });
 
-// ---------- public routes ----------
+// Logout Back handler
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+// Route Handler
 app.use('/staff', staffRouter);
-
-// ---------- everything below requires login ----------
 app.use(requireAuth);
-
 app.use('/books', booksRouter);
 app.use('/members', membersRouter);
 app.use('/circulation', circulationRouter);
@@ -93,19 +98,12 @@ app.all('/{*splat}', (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  let { status = 500, message = 'Something went wrong' } = err;
-  res.render('error.ejs', { err });
-  // res.status(status).send(message);
-});
-
-// ---------- error handler (after all routes) ----------
-app.use((err, req, res, next) => {
-  console.error(`Error on ${req.method} ${req.originalUrl}:`, err);
   if (res.headersSent) return next(err);
-  res.status(500).send('Page Not Found');
+  const status = Number(err.status) || 500;
+  res.status(status).render('error.ejs', { err });
 });
 
-// ---------- start server (last) ----------
+// Server Listen
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server :: Online || http://localhost:${port}`);
 });

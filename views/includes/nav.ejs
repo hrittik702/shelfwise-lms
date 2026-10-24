@@ -26,7 +26,8 @@
     </button>
 
     <!-- Navigation & Action Regions -->
-    <div class="collapse navbar-collapse" id="shelfwiseNavbar">
+    <% if(locals.currUser) {%>
+      <div class="collapse navbar-collapse" id="shelfwiseNavbar">
       <!-- Centered Navigation Links -->
       <ul class="navbar-nav mx-auto text-center my-2 my-lg-0">
         <li class="nav-item">
@@ -40,12 +41,23 @@
       <!-- Right-aligned Login Action -->
       <div class="navbar-nav-action text-center text-lg-end my-2 my-lg-0">
         <a
+          href="/staff/logout"
+          class="btn btn-brand px-4 py-2 fw-semibold rounded-pill text-decoration-none"
+        >
+          Log Out
+        </a>
+      </div>
+    </div>
+    <% } else {%>
+      <div class="navbar-nav-action text-center text-lg-end my-2 my-lg-0">
+        <a
           href="/staff/login"
           class="btn btn-brand px-4 py-2 fw-semibold rounded-pill text-decoration-none"
         >
           Log In
         </a>
       </div>
-    </div>
+      <% } %>
+    
   </div>
 </nav>

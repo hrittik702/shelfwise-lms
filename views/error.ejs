@@ -1,0 +1,53 @@
+<% layout('/layout/boilerplate') %>
+
+<%
+  const status = Number(err && err.status) || 500;
+
+  const titles = {
+    400: 'Bad request',
+    401: 'Login required',
+    403: 'Access denied',
+    404: 'Page not found',
+    500: 'Something went wrong'
+  };
+  const hints = {
+    400: 'The request could not be understood. Please check the details and try again.',
+    401: 'Please log in to continue.',
+    403: 'You do not have permission to open this page.',
+    404: 'The page you are looking for does not exist or may have been moved.',
+    500: 'An unexpected error occurred. Please try again in a moment.'
+  };
+
+  const title = titles[status] || titles[500];
+  const hint = hints[status] || hints[500];
+
+  // show the specific message only when it adds information
+  const rawMessage = (err && err.message) ? String(err.message).trim() : '';
+  const normalise = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+  const showMessage = rawMessage && ![normalise(title), normalise(hint)].includes(normalise(rawMessage));
+%>
+
+<div class="container py-5">
+  <div class="error">
+    <div class="sw-error-card mx-auto text-center">
+
+    <img src="/assets/logo.png" alt="" class="sw-error-logo" width="56" height="56">
+
+    <div class="sw-error-code"><%= status %></div>
+    <div class="sw-error-divider" aria-hidden="true"></div>
+
+    <h1 class="sw-error-title"><%= title %></h1>
+    <p class="sw-error-hint"><%= hint %></p>
+
+    <% if (showMessage) { %>
+      <p class="sw-error-detail"><%= rawMessage %></p>
+    <% } %>
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+      <a href="/" class="btn btn-sw-primary px-4">Go to Home</a>
+      <button type="button" class="btn btn-sw-outline px-4" onclick="history.back()">Go Back</button>
+    </div>
+
+  </div>
+  </div>
+</div>
