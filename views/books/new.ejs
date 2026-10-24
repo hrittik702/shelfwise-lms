@@ -17,14 +17,14 @@
     <div class="card-header bg-white border-bottom p-4">
       <h2 class="h5 fw-bold mb-1">Book Information</h2>
       <p class="text-secondary small mb-0">
-        Fields marked with * are required.
+        Fields marked with <span style="color: red;">*</span> are required.
       </p>
     </div>
     <div class="card-body p-4">
       <form action="/books" method="POST">
         <!-- ISBN -->
         <div class="mb-4">
-          <label for="isbn" class="form-label fw-semibold">ISBN *</label>
+          <label for="isbn" class="form-label fw-semibold">ISBN <span style="color: red;">*</span></label>
           <input
             type="text"
             class="form-control"
@@ -42,7 +42,7 @@
 
         <!-- Title -->
         <div class="mb-4">
-          <label for="title" class="form-label fw-semibold">Book Title *</label>
+          <label for="title" class="form-label fw-semibold">Book Title <span style="color: red;">*</span></label>
           <input
             type="text"
             class="form-control"
@@ -57,7 +57,7 @@
         <!-- Author and Publisher -->
         <div class="row g-3 mb-4">
           <div class="col-12 col-md-6">
-            <label for="author" class="form-label fw-semibold">Author *</label>
+            <label for="author" class="form-label fw-semibold">Author <span style="color: red;">*</span></label>
             <input
               type="text"
               class="form-control"
@@ -87,51 +87,92 @@
         </div>
 
         <!-- Publication Year and Category -->
-        <div class="row g-3 mb-4">
+       <div class="row g-3 mb-4">
 
-          <div class="col-12 col-md-6">
-            <label for="pub_year" class="form-label fw-semibold">
-              Publication Year *
-            </label>
+  <div class="col-12 col-md-6">
+    <label for="pub_year" class="form-label fw-semibold">
+      Publication Year <span style="color: red;">*</span>
+    </label>
 
-            <input
-              type="number"
-              class="form-control"
-              id="pub_year"
-              name="pub_year"
-              min="1901"
-              max="2155"
-              step="1"
-              placeholder="e.g. 2024"
-              required
-            >
-          </div>
+    <input
+      type="number"
+      class="form-control"
+      id="pub_year"
+      name="pub_year"
+      min="1901"
+      max="2155"
+      step="1"
+      placeholder="e.g. 2024"
+      required
+    >
+  </div>
 
-          <div class="col-12 col-md-6">
-            <label for="category_id" class="form-label fw-semibold">
-              Category *
-            </label>
+  <div class="col-12 col-md-6">
+    <label for="category_id" class="form-label fw-semibold">
+      Category <span style="color: red;">*</span>
+    </label>
 
-            <select
-              class="form-select"
-              id="category_id"
-              name="category_id"
-              required
-            >
-              <option value="" selected disabled>
-                Select a category
-              </option>
+    <select
+      class="form-select"
+      id="category_id"
+      name="category_id"
+      required
+    >
+      <option value="" selected disabled>
+        Select a category
+      </option>
 
-              <% categories.forEach(category => { %>
-                <option value="<%= category.category_id %>">
-                  <%= category.category_name %>
-                </option>
-              <% }) %>
+      <% categories.forEach(category => { %>
+        <option value="<%= category.category_id %>">
+          <%= category.category_name %>
+        </option>
+      <% }) %>
 
-            </select>
-          </div>
+      <option value="other">Other (Add new category)</option>
+    </select>
 
-        </div>
+    <!-- Shown only when "Other" is selected -->
+    <div id="newCategoryWrapper" class="mt-3 d-none">
+      <label for="new_category_name" class="form-label fw-semibold">
+        New Category Name
+      </label>
+
+      <input
+        type="text"
+        class="form-control"
+        id="new_category_name"
+        name="new_category_name"
+        maxlength="20"
+        placeholder="e.g. Robotics"
+      >
+
+      <div class="form-text">
+        Maximum 20 characters.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  (function () {
+    const select = document.getElementById('category_id');
+    const wrapper = document.getElementById('newCategoryWrapper');
+    const input = document.getElementById('new_category_name');
+
+    function toggleNewCategory() {
+      const isOther = select.value === 'other';
+      wrapper.classList.toggle('d-none', !isOther);
+      input.required = isOther;
+      input.disabled = !isOther;   // a hidden field is not submitted
+      if (isOther) input.focus();
+      else input.value = '';
+    }
+
+    select.addEventListener('change', toggleNewCategory);
+    toggleNewCategory();           // correct state on page load / back button
+  })();
+</script>
 
         <!-- Inventory -->
         <div class="border rounded-3 p-3 mb-4">

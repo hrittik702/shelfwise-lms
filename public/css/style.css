@@ -572,3 +572,88 @@ footer.footer {
     transform: none;
   }
 }
+
+/* ---------- Error page ---------- */
+
+.container {
+  flex: 1;
+}
+
+.error {
+  margin-top: 4rem;
+}
+
+.sw-error-card {
+  max-width: 560px;
+  padding: 2.5rem 1.5rem;
+  background: var(--sw-surface, #fff);
+  border: 1px solid var(--sw-border, #e3e7df);
+  border-top: 4px solid var(--sw-gold, #d2a747);
+  border-radius: var(--sw-radius-lg, 1rem);
+  box-shadow: var(--sw-shadow-md, 0 8px 24px rgba(26, 43, 33, 0.07));
+}
+.sw-error-logo {
+  margin-bottom: 0.75rem;
+  object-fit: contain;
+}
+.sw-error-code {
+  font-size: clamp(3.5rem, 12vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--sw-emerald, #063b2f);
+}
+.sw-error-divider {
+  width: 56px;
+  height: 3px;
+  margin: 1rem auto;
+  border-radius: 2px;
+  background: var(--sw-gold, #d2a747);
+}
+.sw-error-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sw-emerald, #063b2f);
+  margin-bottom: 0.5rem;
+}
+.sw-error-hint {
+  color: var(--sw-text-secondary, #626f66);
+  margin-bottom: 0.5rem;
+}
+.sw-error-detail {
+  display: inline-block;
+  margin: 0.25rem 0 0;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--sw-emerald, #063b2f);
+  background: var(--sw-emerald-soft, #e7f0e9);
+  border-radius: 999px;
+}
+
+/* Buttons (reusable on other pages) */
+.btn-sw-primary {
+  color: #fff;
+  background: var(--sw-emerald, #063b2f);
+  border: 1px solid var(--sw-emerald, #063b2f);
+  border-radius: var(--sw-radius-md, 0.625rem);
+}
+.btn-sw-primary:hover,
+.btn-sw-primary:focus {
+  color: #fff;
+  background: var(--sw-emerald-hover, #105541);
+  border-color: var(--sw-emerald-hover, #105541);
+}
+.btn-sw-outline {
+  color: var(--sw-emerald, #063b2f);
+  background: transparent;
+  border: 1px solid var(--sw-emerald, #063b2f);
+  border-radius: var(--sw-radius-md, 0.625rem);
+}
+.btn-sw-outline:hover,
+.btn-sw-outline:focus {
+  color: #fff;
+  background: var(--sw-emerald, #063b2f);
+}
+.btn-sw-primary:focus-visible,
+.btn-sw-outline:focus-visible {
+  box-shadow: 0 0 0 0.2rem var(--sw-focus-ring, rgba(6, 59, 47, 0.22));
+}
