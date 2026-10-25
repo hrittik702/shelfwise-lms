@@ -1,0 +1,167 @@
+<% layout('/layout/boilerplate') %>
+
+<div class="container py-4 py-lg-5">
+
+  <%
+    const fmt = (d) => d
+      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    const FINE_PER_DAY = 2;
+
+    const loanList = (typeof loans !== 'undefined' && Array.isArray(loans)) ? loans : [];
+    const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+    const totPages = Number(typeof totalPages !== 'undefined' ? totalPages : 1) || 1;
+    const totItems = Number(typeof total !== 'undefined' ? total : loanList.length) || 0;
+    const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+
+    const totalFineCalc = loanList.reduce((acc, l) => {
+      const days = Number(l.days_overdue) || 0;
+      return acc + (days > 0 ? days * FINE_PER_DAY : 0);
+    }, 0);
+
+    const overdueCount = typeof totals !== 'undefined' && typeof totals.count !== 'undefined' ? totals.count : totItems;
+    const totalEstFine = typeof totals !== 'undefined' && typeof totals.est_fine !== 'undefined' ? totals.est_fine : totalFineCalc;
+  %>
+
+  <!-- Back navigation -->
+  <div class="mb-4">
+    <a href="/circulation" class="btn btn-outline-secondary btn-sm">
+      <span aria-hidden="true">&larr;</span> Back to Circulation
+    </a>
+  </div>
+
+  <!-- Page heading -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Overdue Loans</h1>
+      <p class="text-secondary mb-0">Books that have exceeded their 14-day loan period.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/circulation/return" class="btn btn-success px-3">
+        Return Desk
+      </a>
+      <a href="/circulation/fines" class="btn btn-outline-secondary px-3">
+        View Fines
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Tiles -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-danger border-4">
+        <div class="text-secondary small">Total Overdue Loans</div>
+        <div class="fs-3 fw-bold text-danger"><%= overdueCount %></div>
+        <div class="small text-secondary">Active loans needing immediate return</div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-warning border-4">
+        <div class="text-secondary small">Estimated Accrued Fines</div>
+        <div class="fs-3 fw-bold text-dark">₹<%= totalEstFine %></div>
+        <div class="small text-secondary">Calculated at ₹2 per overdue day</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue Table -->
+  <div class="table-responsive border rounded-3 shadow-sm bg-white">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="ps-3 text-secondary small text-center" style="width: 60px;">S.No.</th>
+          <th scope="col">Book</th>
+          <th scope="col">Borrower</th>
+          <th scope="col" class="text-center">Phone</th>
+          <th scope="col" class="text-center">Due Date</th>
+          <th scope="col" class="text-center">Overdue Duration</th>
+          <th scope="col" class="text-end">Est. Fine</th>
+          <th scope="col" class="pe-3 text-center" style="width: 100px;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (loanList.length > 0) { %>
+          <% loanList.forEach((loan, index) => {
+            const days = Number(loan.days_overdue) || 0;
+            const fine = days > 0 ? days * FINE_PER_DAY : 0;
+            const serialNo = (curPage - 1) * itemLimit + index + 1;
+            const isSevere = days >= 8;
+          %>
+            <tr>
+              <td class="ps-3 text-center text-secondary small"><%= serialNo %></td>
+
+              <td class="fw-semibold">
+                <a href="/books/<%= loan.book_id %>" class="text-decoration-none text-dark">
+                  <%= loan.book_title || loan.title || ('Book #' + loan.book_id) %>
+                </a>
+                <% if (loan.isbn) { %>
+                  <div class="font-monospace small text-secondary"><%= loan.isbn %></div>
+                <% } %>
+              </td>
+
+              <td>
+                <a href="/members/<%= loan.member_id %>" class="text-decoration-none text-dark fw-medium">
+                  <%= loan.member_name || ('Member #' + loan.member_id) %>
+                </a>
+                <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
+                  <%= loan.member_type || 'student' %>
+                </span>
+              </td>
+
+              <td class="text-center font-monospace small">
+                <% if (loan.phone) { %>
+                  <a href="tel:<%= loan.phone %>" class="text-decoration-none text-secondary">
+                    <i class="bi bi-telephone-fill me-1 small"></i><%= loan.phone %>
+                  </a>
+                <% } else { %>
+                  —
+                <% } %>
+              </td>
+
+              <td class="text-center small text-nowrap"><%= fmt(loan.due_date) %></td>
+
+              <td class="text-center">
+                <span class="badge rounded-pill <%= isSevere ? 'text-bg-danger' : 'text-bg-warning text-dark' %> px-2 py-1">
+                  <%= days %> day<%= days === 1 ? '' : 's' %> late
+                </span>
+              </td>
+
+              <td class="text-end font-monospace fw-bold text-danger text-nowrap">
+                ₹<%= fine %>
+              </td>
+
+              <td class="pe-3 text-center">
+                <a href="/circulation/return?issue_id=<%= loan.issue_id %>" class="btn btn-outline-success btn-sm px-3">
+                  Return
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-5">
+              <div class="text-success mb-2">
+                <i class="bi bi-check-circle-fill fs-2"></i>
+              </div>
+              <div class="fw-semibold mb-1">No overdue loans!</div>
+              <div class="text-secondary small">All books have been returned or are within their allowed loan period.</div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex flex-wrap gap-3 mt-3 small text-secondary">
+    <span>
+      <span class="badge rounded-pill text-bg-warning text-dark me-1">1–7 days</span> Moderate overdue
+    </span>
+    <span>
+      <span class="badge rounded-pill text-bg-danger me-1">8+ days</span> Critical overdue
+    </span>
+  </div>
+
+  <!-- Pagination -->
+  <%- include('../components/pagination', { page: curPage, totalPages: totPages, total: totItems, limit: itemLimit, params: {} }) %>
+
+</div>

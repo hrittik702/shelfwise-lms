@@ -17,6 +17,7 @@ const booksRouter = require('./routes/books.js');
 const membersRouter = require('./routes/members.js');
 const staffRouter = require('./routes/staff.js');
 const circulationRouter = require('./routes/circulation.js');
+const wrapAsync = require('./utils/wrapAsync.js');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -72,6 +73,7 @@ app.use((req, res, next) => {
     ? { id: req.session.staffId, name: req.session.staffName }
     : null;
   res.locals.locals = res.locals;
+  res.locals.currentPath = req.path;
   next();
 });
 
@@ -88,9 +90,28 @@ app.use('/books', booksRouter);
 app.use('/members', membersRouter);
 app.use('/circulation', circulationRouter);
 
-app.get('/', (req, res) => {
-  res.render('index.ejs');
-});
+app.get(
+  '/',
+  wrapAsync(async (req, res) => {
+    const [[stats]] = await db.query(`
+    SELECT
+      (SELECT COUNT(*) FROM books) AS total_books,
+      (SELECT COUNT(*) FROM issue WHERE return_date IS NULL) AS books_on_loan,
+      (SELECT COUNT(*) FROM issue WHERE return_date IS NULL AND due_date < CURDATE()) AS overdue_loans,
+      (SELECT COALESCE(SUM(amount), 0) FROM fine WHERE paid_status = 'unpaid') AS unpaid_fines_amount`);
+
+    const [attention] = await db.query(`
+    SELECT i.issue_id, b.book_id, b.title AS book_title, m.member_id, m.name AS member_name,
+           i.due_date, DATEDIFF(CURDATE(), i.due_date) AS days_overdue
+    FROM issue i
+    JOIN books b ON b.book_id = i.book_id
+    JOIN members m ON m.member_id = i.member_id
+    WHERE i.return_date IS NULL AND i.due_date < CURDATE()
+    ORDER BY days_overdue DESC LIMIT 5`);
+
+    res.render('index.ejs', { stats, attention, currentPath: '/' });
+  })
+);
 
 // All page Error Checking
 app.all('/{*splat}', (req, res, next) => {

@@ -2,25 +2,36 @@
 
 <div class="container py-4 py-lg-5">
 
+  <%
+    const fmt = (d) => d
+      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+
+    const loans = (typeof activeLoans !== 'undefined' && Array.isArray(activeLoans)) ? activeLoans : [];
+    const count = typeof loanCount !== 'undefined' ? Number(loanCount) : loans.length;
+    const avail = Number(book.available_copies) || 0;
+    const total = Number(book.total_copies) || 0;
+    const canIssue = avail > 0;
+    const canDelete = count === 0 && (total === avail);
+  %>
+
   <!-- Page actions -->
   <div class="mb-4">
-    <a href="/books" class="btn btn-outline-success btn-sm">
-      <span aria-hidden="true">&larr;</span>
-      Back to Book Catalog
+    <a href="/books" class="btn btn-outline-secondary btn-sm">
+      <span aria-hidden="true">&larr;</span> Back to Book Catalog
     </a>
   </div>
 
   <!-- Book details card -->
-  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
 
     <!-- Card header -->
     <div class="card-header bg-white border-bottom p-4">
-      <div class="d-flex flex-wrap justify-content-between
-                  align-items-start gap-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
 
         <div>
           <span class="badge rounded-pill text-bg-light border mb-2">
-            <%= book.category_name %>
+            <%= book.category_name || 'General' %>
           </span>
 
           <h1 class="h3 fw-bold mb-2">
@@ -32,17 +43,20 @@
           </p>
         </div>
 
-        <!-- Availability status -->
-        <div>
-          <% if (Number(book.available_copies) > 0) { %>
-            <span class="badge rounded-pill text-bg-success px-3 py-2">
-              Available
-            </span>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <% if (canIssue) { %>
+            <a href="/circulation/issue?book_id=<%= book.book_id %>" class="btn btn-success px-3">
+              + Issue Book
+            </a>
           <% } else { %>
-            <span class="badge rounded-pill text-bg-danger px-3 py-2">
-              Unavailable
-            </span>
+            <button type="button" class="btn btn-outline-secondary px-3" disabled title="No copies available">
+              + Issue Book
+            </button>
           <% } %>
+
+          <a href="/books/<%= book.book_id %>/update" class="btn btn-outline-secondary px-3">
+            Edit Book
+          </a>
         </div>
 
       </div>
@@ -53,103 +67,147 @@
 
       <h2 class="h6 fw-bold mb-4">Book Information</h2>
 
-      <div class="row g-4">
+      <div class="row g-4 mb-4">
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-secondary small mb-1">Book ID</div>
-          <div class="fw-semibold"><%= book.book_id %></div>
+          <div class="fw-semibold">#<%= book.book_id %></div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-secondary small mb-1">ISBN</div>
-          <div class="font-monospace">
-            <%= book.isbn %>
-          </div>
+          <div class="font-monospace fw-semibold"><%= book.isbn %></div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-secondary small mb-1">Author</div>
           <div class="fw-semibold"><%= book.author %></div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-secondary small mb-1">Publisher</div>
-          <div class="fw-semibold">
-            <%= book.publisher || 'Not specified' %>
-          </div>
+          <div class="fw-semibold"><%= book.publisher || 'Not specified' %></div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-secondary small mb-1">Publication Year</div>
           <div class="fw-semibold"><%= book.pub_year %></div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-secondary small mb-1">Category</div>
-          <div class="fw-semibold"><%= book.category_name %></div>
+          <div class="fw-semibold"><%= book.category_name || 'General' %></div>
         </div>
 
       </div>
 
-      <hr class="my-4">
-
-      <!-- Available copies and update action -->
-      <div class="d-flex flex-wrap justify-content-between
-                  align-items-center gap-3">
-
-        <div>
-          <h2 class="h6 fw-bold mb-1">Available Copies</h2>
-          <p class="text-secondary small mb-0">
-            Physical copies currently available for borrowing.
-          </p>
-        </div>
-
-        <div class="d-flex align-items-center gap-3">
-
-          <div class="d-flex align-items-baseline gap-2">
-            <span class="display-6 fw-bold text-success">
-              <%= book.available_copies %>
-            </span>
-            <span class="text-secondary small">copies</span>
+      <!-- Inventory Bar -->
+      <div class="border rounded-3 p-3 mb-4 bg-light">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+          <div>
+            <h3 class="h6 fw-bold mb-0">Inventory &amp; Availability</h3>
+            <div class="text-secondary small">Copies currently in stock vs total catalog copies.</div>
           </div>
-
-          <!-- Update book icon button -->
-          <a
-            href="/books/<%= book.book_id %>/update"
-            class="btn btn-outline-success rounded-3 d-inline-flex
-                   align-items-center justify-content-center"
-            style="width: 42px; height: 42px;"
-            aria-label="Update book information"
-            title="Update Book"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-            </svg>
-          </a>
-          <a
-            href="/books/<%= book.book_id %>/delete"
-            class="btn btn-outline-danger rounded-3 d-inline-flex
-                   align-items-center justify-content-center"
-            style="width: fit-content; height: 42px;"
-            aria-label="Delete Book"
-            title="delete book"
-          >
-            Delete
-          </a>
+          <div>
+            <span class="fs-4 fw-bold <%= avail > 0 ? 'text-success' : 'text-danger' %>"><%= avail %></span>
+            <span class="text-secondary">/ <%= total %> available</span>
+          </div>
         </div>
+        <div class="progress" style="height: 8px;" role="progressbar" aria-valuenow="<%= avail %>" aria-valuemin="0" aria-valuemax="<%= total %>">
+          <div class="progress-bar <%= avail === 0 ? 'bg-danger' : (avail < total / 3 ? 'bg-warning' : 'bg-success') %>"
+               style="width: <%= total > 0 ? Math.round((avail / total) * 100) : 0 %>%;"></div>
+        </div>
+      </div>
+
+      <!-- Who Has It Now (Active Loans) -->
+      <div class="border rounded-3 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold mb-0">Who Has It Now (Active Loans)</h2>
+          <span class="badge rounded-pill text-bg-light border text-dark fw-normal">
+            <%= loans.length %> <%= loans.length === 1 ? 'borrower' : 'borrowers' %>
+          </span>
+        </div>
+
+        <% if (loans.length > 0) { %>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="ps-2 small text-secondary">Member</th>
+                  <th scope="col" class="text-center small text-secondary">Type</th>
+                  <th scope="col" class="text-center small text-secondary">Issued</th>
+                  <th scope="col" class="text-center small text-secondary">Due Date</th>
+                  <th scope="col" class="text-center small text-secondary">Status</th>
+                  <th scope="col" class="pe-2 text-center small text-secondary" style="width: 90px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% loans.forEach((loan) => {
+                  const days = typeof loan.days_overdue !== 'undefined' ? Number(loan.days_overdue) : 0;
+                %>
+                  <tr>
+                    <td class="ps-2 fw-semibold">
+                      <a href="/members/<%= loan.member_id %>" class="text-decoration-none text-dark">
+                        <%= loan.member_name || ('Member #' + loan.member_id) %>
+                      </a>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize">
+                        <%= loan.member_type || 'student' %>
+                      </span>
+                    </td>
+                    <td class="text-center small text-nowrap"><%= fmt(loan.issue_date) %></td>
+                    <td class="text-center small text-nowrap"><%= fmt(loan.due_date) %></td>
+                    <td class="text-center">
+                      <% if (days > 0) { %>
+                        <span class="badge rounded-pill text-bg-danger"><%= days %>d overdue</span>
+                      <% } else if (days === 0) { %>
+                        <span class="badge rounded-pill text-bg-warning">Due today</span>
+                      <% } else { %>
+                        <span class="badge rounded-pill text-bg-success"><%= Math.abs(days) %>d left</span>
+                      <% } %>
+                    </td>
+                    <td class="pe-2 text-center">
+                      <a href="/circulation/return?issue_id=<%= loan.issue_id %>" class="btn btn-sm btn-outline-success">
+                        Return
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="text-secondary small py-2">No copies are currently on loan.</div>
+        <% } %>
+      </div>
+
+    </div>
+
+    <!-- Card footer with Delete action -->
+    <div class="card-footer bg-white border-top p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <div class="fw-semibold">Delete Book</div>
+          <div class="text-secondary small">
+            <% if (canDelete) { %>
+              This book has no active loans or circulation history and can be safely removed.
+            <% } else { %>
+              Cannot delete: this book has active loans or borrow history.
+            <% } %>
+          </div>
+        </div>
+
+        <% if (canDelete) { %>
+          <form action="/books/<%= book.book_id %>/delete" method="POST"
+                onsubmit="return confirm('Are you sure you want to delete this book? This cannot be undone.');">
+            <button type="submit" class="btn btn-outline-danger px-4">Delete Book</button>
+          </form>
+        <% } else { %>
+          <button type="button" class="btn btn-outline-secondary px-4" disabled>Delete Book</button>
+        <% } %>
       </div>
     </div>
+
   </div>
 </div>

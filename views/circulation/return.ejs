@@ -1,0 +1,230 @@
+<% layout('/layout/boilerplate') %>
+
+<div class="container py-4 py-lg-5">
+
+  <%
+    const fmt = (d) => d
+      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    const FINE_PER_DAY = 2;
+
+    const loanList = (typeof loans !== 'undefined' && Array.isArray(loans)) ? loans : [];
+    const query = typeof q !== 'undefined' ? q : '';
+    const autoIssueId = typeof selectedIssueId !== 'undefined' ? selectedIssueId : '';
+    const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+    const totPages = Number(typeof totalPages !== 'undefined' ? totalPages : 1) || 1;
+    const totItems = Number(typeof total !== 'undefined' ? total : loanList.length) || 0;
+    const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+  %>
+
+  <!-- Back navigation -->
+  <div class="mb-4">
+    <a href="/circulation" class="btn btn-outline-secondary btn-sm">
+      <span aria-hidden="true">&larr;</span> Back to Circulation
+    </a>
+  </div>
+
+  <!-- Page heading -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Return Desk</h1>
+      <p class="text-secondary mb-0">Look up active loans, verify return details, and record overdue fines.</p>
+    </div>
+    <div>
+      <span class="badge rounded-pill text-bg-light border px-3 py-2">
+        <%= totItems %> active <%= totItems === 1 ? 'loan' : 'loans' %>
+      </span>
+    </div>
+  </div>
+
+  <!-- Search Desk Bar -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form action="/circulation/return" method="GET" class="row g-2 align-items-center">
+      <div class="col-12 col-md-10">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0 text-secondary">
+            <i class="bi bi-search" aria-hidden="true"></i>
+          </span>
+          <input
+            type="search"
+            name="q"
+            class="form-control border-start-0 ps-0"
+            placeholder="Search by member name, book title, or ISBN..."
+            value="<%= query %>"
+            autofocus
+            aria-label="Search loans"
+          />
+        </div>
+      </div>
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-success flex-grow-1">Search</button>
+        <% if (query) { %>
+          <a href="/circulation/return" class="btn btn-outline-secondary" title="Clear search">Clear</a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loan Table -->
+  <div class="table-responsive border rounded-3 shadow-sm bg-white">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="ps-3 text-secondary small text-center" style="width: 60px;">S.No.</th>
+          <th scope="col">Book</th>
+          <th scope="col">Member</th>
+          <th scope="col" class="text-center">Issued</th>
+          <th scope="col" class="text-center">Due Date</th>
+          <th scope="col" class="text-center">Status</th>
+          <th scope="col" class="text-end">Est. Fine</th>
+          <th scope="col" class="pe-3 text-center" style="width: 110px;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (loanList.length > 0) { %>
+          <% loanList.forEach((loan, index) => {
+            const days = Number(loan.days_overdue) || 0;
+            const fine = days > 0 ? days * FINE_PER_DAY : 0;
+            const serialNo = (curPage - 1) * itemLimit + index + 1;
+            const issueId = loan.issue_id;
+            const isMatchAuto = String(autoIssueId) === String(issueId);
+          %>
+            <tr class="<%= isMatchAuto ? 'table-warning' : '' %>" id="loan-row-<%= issueId %>">
+              <td class="ps-3 text-center text-secondary small"><%= serialNo %></td>
+
+              <td class="fw-semibold">
+                <a href="/books/<%= loan.book_id %>" class="text-decoration-none text-dark">
+                  <%= loan.book_title || loan.title || ('Book #' + loan.book_id) %>
+                </a>
+                <% if (loan.isbn) { %>
+                  <div class="font-monospace small text-secondary"><%= loan.isbn %></div>
+                <% } %>
+              </td>
+
+              <td>
+                <a href="/members/<%= loan.member_id %>" class="text-decoration-none text-dark fw-medium">
+                  <%= loan.member_name || ('Member #' + loan.member_id) %>
+                </a>
+                <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
+                  <%= loan.member_type || 'student' %>
+                </span>
+                <% if (loan.phone) { %>
+                  <div class="small text-secondary font-monospace"><%= loan.phone %></div>
+                <% } %>
+              </td>
+
+              <td class="text-center small text-nowrap"><%= fmt(loan.issue_date) %></td>
+              <td class="text-center small text-nowrap"><%= fmt(loan.due_date) %></td>
+
+              <td class="text-center">
+                <% if (days > 0) { %>
+                  <span class="badge rounded-pill text-bg-danger"><%= days %>d overdue</span>
+                <% } else if (days === 0) { %>
+                  <span class="badge rounded-pill text-bg-warning">Due today</span>
+                <% } else { %>
+                  <span class="badge rounded-pill text-bg-success"><%= Math.abs(days) %>d left</span>
+                <% } %>
+              </td>
+
+              <td class="text-end text-nowrap <%= fine > 0 ? 'text-danger fw-semibold' : 'text-secondary' %>">
+                <%= fine > 0 ? '₹' + fine : '—' %>
+              </td>
+
+              <td class="pe-3 text-center">
+                <button
+                  type="button"
+                  class="btn btn-success btn-sm px-3 return-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#returnModal"
+                  data-issue-id="<%= issueId %>"
+                  data-book-title="<%= loan.book_title || loan.title || ('Book #' + loan.book_id) %>"
+                  data-member-name="<%= loan.member_name || ('Member #' + loan.member_id) %>"
+                  data-due-date="<%= fmt(loan.due_date) %>"
+                  data-days-late="<%= days %>"
+                  data-fine="<%= fine %>"
+                >
+                  Return
+                </button>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-5">
+              <div class="fw-semibold mb-1">No active loans found</div>
+              <div class="text-secondary small">
+                <% if (query) { %>
+                  No loans matched your search query "<%= query %>". <a href="/circulation/return">Clear search</a>.
+                <% } else { %>
+                  All issued books have been returned.
+                <% } %>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <%- include('../components/pagination', { page: curPage, totalPages: totPages, total: totItems, limit: itemLimit, params: { q: query } }) %>
+
+</div>
+
+<!-- Return Confirmation Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true" data-auto-open="<%= autoIssueId %>">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h1 class="modal-title fs-5 fw-bold" id="returnModalLabel">Confirm Book Return</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form action="/circulation/return" method="POST" id="modalReturnForm">
+        <input type="hidden" name="issue_id" id="modalIssueId" value="" />
+
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <div class="text-secondary small">Book</div>
+            <div class="fw-bold fs-6" id="modalBookTitle">—</div>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-secondary small">Borrower</div>
+            <div class="fw-semibold" id="modalMemberName">—</div>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-secondary small">Due Date</div>
+            <div class="fw-semibold" id="modalDueDate">—</div>
+          </div>
+
+          <!-- Fine preview section -->
+          <div id="modalFineAlert" class="alert alert-warning d-none mb-0">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+              <strong class="text-danger">Overdue Loan</strong>
+            </div>
+            <div class="small">
+              Book is <strong id="modalDaysLateText">0 days</strong> overdue.
+            </div>
+            <div class="mt-2 pt-2 border-top border-warning-subtle small">
+              Fine calculation: <span id="modalFineCalc">0 days × ₹2</span> =
+              <strong class="fs-6 text-danger">₹<span id="modalFineAmount">0</span></strong>
+            </div>
+          </div>
+
+          <div id="modalOnTimeAlert" class="alert alert-success d-none mb-0">
+            <i class="bi bi-check-circle-fill text-success me-1"></i>
+            Returning on time. No overdue fine is charged.
+          </div>
+        </div>
+
+        <div class="modal-footer border-top bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success px-4" id="modalConfirmBtn">Confirm Return</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

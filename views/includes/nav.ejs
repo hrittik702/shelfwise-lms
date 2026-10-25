@@ -1,3 +1,7 @@
+<%
+  const user = (typeof currUser !== 'undefined' && currUser) ? currUser : (typeof locals !== 'undefined' && locals.currUser ? locals.currUser : null);
+  const cur = typeof currentPath !== 'undefined' ? currentPath : '';
+%>
 <nav class="navbar navbar-expand-lg border-bottom sticky-top py-2 navbar-shelfwise">
   <div class="container">
     <!-- Brand on the left -->
@@ -25,39 +29,56 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Navigation & Action Regions -->
-    <% if(locals.currUser) {%>
-      <div class="collapse navbar-collapse" id="shelfwiseNavbar">
-      <!-- Centered Navigation Links -->
-      <ul class="navbar-nav mx-auto text-center my-2 my-lg-0">
-        <li class="nav-item">
-          <a class="nav-link px-3" href="/">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link px-3" href="/staff/signup">Staff Sign Up</a>
-        </li>
-      </ul>
+    <!-- Navigation & Action Regions (Collapsible container always rendered) -->
+    <div class="collapse navbar-collapse" id="shelfwiseNavbar">
+      <% if (user) { %>
+        <!-- Centered Navigation Links -->
+        <ul class="navbar-nav mx-auto text-center my-2 my-lg-0 gap-1 gap-xl-2">
+          <li class="nav-item">
+            <a class="nav-link px-2 px-xl-3 <%= cur === '/' ? 'active' : '' %>" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-2 px-xl-3 <%= cur.startsWith('/books') ? 'active' : '' %>" href="/books">Books</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-2 px-xl-3 <%= cur.startsWith('/members') ? 'active' : '' %>" href="/members">Members</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-2 px-xl-3 <%= cur === '/circulation' || cur === '/circulation/issue' ? 'active' : '' %>" href="/circulation">Circulation</a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link px-2 px-xl-3 <%= cur === '/staff/signup' ? 'active' : '' %>" href="/staff/signup">Add Staff</a>
+          </li>
+        </ul>
 
-      <!-- Right-aligned Login Action -->
-      <div class="navbar-nav-action text-center text-lg-end my-2 my-lg-0">
-        <a
-          href="/staff/logout"
-          class="btn btn-brand px-4 py-2 fw-semibold rounded-pill text-decoration-none"
-        >
-          Log Out
-        </a>
-      </div>
-    </div>
-    <% } else {%>
-      <div class="navbar-nav-action text-center text-lg-end my-2 my-lg-0">
-        <a
-          href="/staff/login"
-          class="btn btn-brand px-4 py-2 fw-semibold rounded-pill text-decoration-none"
-        >
-          Log In
-        </a>
-      </div>
+        <!-- Right-aligned Actions & User Info -->
+        <div class="navbar-nav-action d-flex flex-column flex-lg-row align-items-center justify-content-center justify-content-lg-end gap-4 my-2 my-lg-0">
+          <span class="small text-secondary d-none d-lg-inline text-truncate" style="max-width: 160px;" title="<%= user.name %>">
+            <i class="bi bi-person-circle me-1" aria-hidden="true"></i><%= user.name %>
+          </span>
+          <form action="/staff/logout" method="POST" class="d-inline m-0">
+            <button
+              type="submit"
+              class="btn btn-brand px-3 py-1 py-lg-2 fw-semibold rounded-pill text-decoration-none text-nowrap"
+            >
+              Log Out
+            </button>
+          </form>
+        </div>
+      <% } else { %>
+        <ul class="navbar-nav mx-auto text-center my-2 my-lg-0"></ul>
+        <!-- Right-aligned Login Action -->
+        <div class="navbar-nav-action text-center text-lg-end my-2 my-lg-0 ms-auto">
+          <a
+            href="/staff/login"
+            class="btn btn-brand px-4 py-2 fw-semibold rounded-pill text-decoration-none"
+          >
+            Log In
+          </a>
+        </div>
       <% } %>
-    
+    </div>
+
   </div>
 </nav>

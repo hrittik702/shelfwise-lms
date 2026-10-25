@@ -7,18 +7,24 @@
       ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       : '—';
 
+    const loans = (typeof currentLoans !== 'undefined' && Array.isArray(currentLoans)) ? currentLoans : [];
+    const fineList = (typeof fines !== 'undefined' && Array.isArray(fines)) ? fines : [];
+
     const maxLoans = member.member_type === 'faculty' ? 5 : 3;
-    const active = Number(member.active_loans) || 0;
+    const active = typeof member.active_loans !== 'undefined' ? Number(member.active_loans) : loans.length;
     const totalIssues = Number(member.total_issues) || 0;
     const unpaid = Number(member.unpaid_fines) || 0;
-    const canDelete = totalIssues === 0 && unpaid === 0;
+    const isSuspended = member.status !== 'active';
+    const atLimit = active >= maxLoans;
+    const canBorrow = !isSuspended && !atLimit;
+    const canDelete = totalIssues === 0 && unpaid === 0 && loans.length === 0;
+    const FINE_PER_DAY = 2;
   %>
 
   <!-- Back navigation -->
   <div class="mb-4">
     <a href="/members" class="btn btn-outline-secondary btn-sm">
-      <span aria-hidden="true">&larr;</span>
-      Back to Members
+      <span aria-hidden="true">&larr;</span> Back to Members
     </a>
   </div>
 
@@ -32,7 +38,7 @@
         <div class="d-flex align-items-center gap-3">
           <div class="rounded-circle bg-success-subtle text-success-emphasis border border-success-subtle d-flex align-items-center justify-content-center fw-bold fs-4"
                style="width:56px;height:56px;">
-            <%= member.name.charAt(0).toUpperCase() %>
+            <%= member.name ? member.name.charAt(0).toUpperCase() : 'M' %>
           </div>
 
           <div>
@@ -41,7 +47,7 @@
               <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize">
                 <%= member.member_type %>
               </span>
-              <% if (member.status === 'active') { %>
+              <% if (!isSuspended) { %>
                 <span class="badge rounded-pill text-bg-success">Active</span>
               <% } else { %>
                 <span class="badge rounded-pill text-bg-danger">Suspended</span>
@@ -50,9 +56,22 @@
           </div>
         </div>
 
-        <a href="/members/<%= member.member_id %>/update" class="btn btn-success px-4">
-          Edit Member
-        </a>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <% if (canBorrow) { %>
+            <a href="/circulation/issue?member_id=<%= member.member_id %>" class="btn btn-success px-3">
+              + Issue Book
+            </a>
+          <% } else { %>
+            <button type="button" class="btn btn-outline-secondary px-3" disabled
+                    title="<%= isSuspended ? 'Member is suspended' : 'Borrowing limit reached' %>">
+              + Issue Book
+            </button>
+          <% } %>
+
+          <a href="/members/<%= member.member_id %>/update" class="btn btn-outline-secondary px-3">
+            Edit Member
+          </a>
+        </div>
 
       </div>
     </div>
@@ -63,27 +82,29 @@
       <div class="row g-3 mb-4">
 
         <div class="col-12 col-md-4">
-          <div class="border rounded-3 p-3 h-100">
+          <div class="border rounded-3 p-3 h-100 bg-light">
             <div class="text-secondary small">Active Loans</div>
             <div class="fs-3 fw-bold">
               <%= active %>
               <span class="fs-6 text-secondary fw-normal">of <%= maxLoans %> allowed</span>
             </div>
-            <% if (active >= maxLoans) { %>
+            <% if (atLimit) { %>
               <div class="small text-warning-emphasis">Borrowing limit reached</div>
+            <% } else if (isSuspended) { %>
+              <div class="small text-danger">Member is suspended</div>
             <% } %>
           </div>
         </div>
 
         <div class="col-12 col-md-4">
-          <div class="border rounded-3 p-3 h-100">
+          <div class="border rounded-3 p-3 h-100 bg-light">
             <div class="text-secondary small">Total Books Borrowed</div>
             <div class="fs-3 fw-bold"><%= totalIssues %></div>
           </div>
         </div>
 
         <div class="col-12 col-md-4">
-          <div class="border rounded-3 p-3 h-100">
+          <div class="border rounded-3 p-3 h-100 bg-light">
             <div class="text-secondary small">Unpaid Fines</div>
             <div class="fs-3 fw-bold <%= unpaid > 0 ? 'text-danger' : '' %>">₹<%= unpaid %></div>
             <% if (unpaid > 0) { %>
@@ -95,7 +116,7 @@
       </div>
 
       <!-- Details -->
-      <div class="border rounded-3 p-3">
+      <div class="border rounded-3 p-3 mb-4">
         <h2 class="h6 fw-bold mb-3">Member Details</h2>
 
         <dl class="row mb-0">
@@ -106,7 +127,13 @@
           <dd class="col-sm-9"><%= member.email || '—' %></dd>
 
           <dt class="col-sm-3 text-secondary fw-normal">Phone</dt>
-          <dd class="col-sm-9 font-monospace"><%= member.phone || '—' %></dd>
+          <dd class="col-sm-9 font-monospace">
+            <% if (member.phone) { %>
+              <a href="tel:<%= member.phone %>" class="text-decoration-none text-secondary"><%= member.phone %></a>
+            <% } else { %>
+              —
+            <% } %>
+          </dd>
 
           <dt class="col-sm-3 text-secondary fw-normal">Member Type</dt>
           <dd class="col-sm-9 text-capitalize"><%= member.member_type %></dd>
@@ -115,22 +142,140 @@
           <dd class="col-sm-9"><%= fmt(member.join_date) %></dd>
 
           <dt class="col-sm-3 text-secondary fw-normal">Status</dt>
-          <dd class="col-sm-9 text-capitalize mb-0"><%= member.status %></dd>
+          <dd class="col-sm-9 text-capitalize mb-0">
+            <span class="badge rounded-pill <%= isSuspended ? 'text-bg-danger' : 'text-bg-success' %>">
+              <%= member.status %>
+            </span>
+          </dd>
         </dl>
+      </div>
+
+      <!-- Current Loans Section -->
+      <div class="border rounded-3 p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold mb-0">Current Loans</h2>
+          <span class="badge rounded-pill text-bg-light border text-dark fw-normal">
+            <%= loans.length %> <%= loans.length === 1 ? 'book' : 'books' %>
+          </span>
+        </div>
+
+        <% if (loans.length > 0) { %>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="ps-2 small text-secondary">Book</th>
+                  <th scope="col" class="text-center small text-secondary">Issued</th>
+                  <th scope="col" class="text-center small text-secondary">Due Date</th>
+                  <th scope="col" class="text-center small text-secondary">Status</th>
+                  <th scope="col" class="text-end small text-secondary">Est. Fine</th>
+                  <th scope="col" class="text-center pe-2 small text-secondary" style="width: 90px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% loans.forEach((loan) => {
+                  const days = typeof loan.days_overdue !== 'undefined' ? Number(loan.days_overdue) : 0;
+                  const estFine = days > 0 ? days * FINE_PER_DAY : 0;
+                %>
+                  <tr>
+                    <td class="ps-2">
+                      <a href="/books/<%= loan.book_id %>" class="fw-semibold text-decoration-none text-dark">
+                        <%= loan.book_title || loan.title || ('Book #' + loan.book_id) %>
+                      </a>
+                      <% if (loan.isbn) { %>
+                        <div class="font-monospace small text-secondary"><%= loan.isbn %></div>
+                      <% } %>
+                    </td>
+                    <td class="text-center small text-nowrap"><%= fmt(loan.issue_date) %></td>
+                    <td class="text-center small text-nowrap"><%= fmt(loan.due_date) %></td>
+                    <td class="text-center">
+                      <% if (days > 0) { %>
+                        <span class="badge rounded-pill text-bg-danger"><%= days %>d overdue</span>
+                      <% } else if (days === 0) { %>
+                        <span class="badge rounded-pill text-bg-warning">Due today</span>
+                      <% } else { %>
+                        <span class="badge rounded-pill text-bg-success"><%= Math.abs(days) %>d left</span>
+                      <% } %>
+                    </td>
+                    <td class="text-end text-nowrap <%= estFine > 0 ? 'text-danger fw-semibold' : 'text-secondary' %>">
+                      <%= estFine > 0 ? '₹' + estFine : '—' %>
+                    </td>
+                    <td class="text-center pe-2">
+                      <a href="/circulation/return?issue_id=<%= loan.issue_id %>" class="btn btn-sm btn-outline-success">
+                        Return
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="text-secondary small py-2">No books currently on loan.</div>
+        <% } %>
+      </div>
+
+      <!-- Fines Section -->
+      <div class="border rounded-3 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold mb-0">Fines &amp; Payments</h2>
+          <% if (unpaid > 0) { %>
+            <span class="badge rounded-pill text-bg-danger">₹<%= unpaid %> Unpaid</span>
+          <% } %>
+        </div>
+
+        <% if (fineList.length > 0) { %>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="ps-2 small text-secondary">Fine ID</th>
+                  <th scope="col" class="small text-secondary">Details</th>
+                  <th scope="col" class="text-end small text-secondary">Amount</th>
+                  <th scope="col" class="text-center small text-secondary">Status</th>
+                  <th scope="col" class="pe-2 text-center small text-secondary">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% fineList.forEach((f) => {
+                  const isPaid = f.status === 'paid';
+                %>
+                  <tr>
+                    <td class="ps-2 font-monospace small">#<%= f.fine_id %></td>
+                    <td><%= f.book_title || ('Issue #' + f.issue_id) %></td>
+                    <td class="text-end fw-semibold <%= isPaid ? 'text-secondary' : 'text-danger' %>">
+                      ₹<%= f.amount %>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge rounded-pill <%= isPaid ? 'text-bg-success' : 'text-bg-danger' %>">
+                        <%= isPaid ? 'Paid' : 'Unpaid' %>
+                      </span>
+                    </td>
+                    <td class="pe-2 text-center small text-secondary text-nowrap">
+                      <%= fmt(f.paid_at || f.created_at) %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="text-secondary small py-2">No fine records found for this member.</div>
+        <% } %>
       </div>
 
     </div>
 
-    <!-- Delete -->
+    <!-- Delete member footer -->
     <div class="card-footer bg-white border-top p-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
           <div class="fw-semibold">Delete member</div>
           <div class="text-secondary small">
             <% if (canDelete) { %>
-              This member has no issue history or dues, so they can be deleted.
+              This member has no active loans, borrowing history, or unpaid dues and can be safely removed.
             <% } else { %>
-              Not available: this member has issue history or unpaid dues.
+              Not available: this member has borrowing history, active loans, or unpaid fines.
             <% } %>
           </div>
         </div>

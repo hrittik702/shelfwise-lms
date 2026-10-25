@@ -1,7 +1,8 @@
 <% layout('/layout/boilerplate') %>
 
 <%
-  const status = Number(err && err.status) || 500;
+  const errObj = (typeof err !== 'undefined' && err) ? err : (typeof error !== 'undefined' && error) ? error : {};
+  const status = Number(errObj.status) || 500;
 
   const titles = {
     400: 'Bad request',
@@ -22,7 +23,7 @@
   const hint = hints[status] || hints[500];
 
   // show the specific message only when it adds information
-  const rawMessage = (err && err.message) ? String(err.message).trim() : '';
+  const rawMessage = errObj.message ? String(errObj.message).trim() : '';
   const normalise = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
   const showMessage = rawMessage && ![normalise(title), normalise(hint)].includes(normalise(rawMessage));
 %>

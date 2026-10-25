@@ -79,15 +79,12 @@ router.post(
 );
 
 // Improvement : Confirm Log Out box
-router.get(
-  '/logout',
-  wrapAsync((req, res, next) => {
-    req.session.destroy((err) => {
-      if (err) return next(err);
-      res.clearCookie('lms-cookie');
-      res.redirect('/staff/login');
-    });
-  })
-);
+router.post('/logout', (req, res, next) => {
+  req.session.destroy((err) => {
+    if (err) return next(err);
+    res.clearCookie('lms-cookie');
+    res.redirect('/staff/login');
+  });
+});
 
 module.exports = router;

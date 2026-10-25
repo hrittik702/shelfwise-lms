@@ -1,6 +1,19 @@
 <% layout('/layout/boilerplate') %>
 <div class="members-page container py-4 py-lg-5">
 
+  <%
+    const membersList = (typeof members !== 'undefined' && Array.isArray(members)) ? members : [];
+    const query = typeof q !== 'undefined' ? q : '';
+    const selectedType = typeof type !== 'undefined' ? type : 'all';
+    const selectedStatus = typeof status !== 'undefined' ? status : 'all';
+    const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+    const totPages = Number(typeof totalPages !== 'undefined' ? totalPages : 1) || 1;
+    const totItems = Number(typeof total !== 'undefined' ? total : membersList.length) || 0;
+    const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+    const maxLoansFor = (type) => (type === 'faculty' ? 5 : 3);
+    const hasFilter = query || (selectedType && selectedType !== 'all') || (selectedStatus && selectedStatus !== 'all');
+  %>
+
   <!-- Page heading -->
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
@@ -11,49 +24,110 @@
     </div>
     <div class="d-flex align-items-center gap-2">
       <span class="badge rounded-pill text-bg-light border px-3 py-2">
-        <%= members.length %> members
+        <%= totItems %> <%= totItems === 1 ? 'member' : 'members' %>
       </span>
       <a href="/members/new" class="btn btn-success btn-sm px-3">
-        <span aria-hidden="true">+</span></a>
+        <span aria-hidden="true">+</span> Register Member
+      </a>
     </div>
   </div>
 
-  <%
-    const maxLoansFor = (type) => (type === 'faculty' ? 5 : 3);
-  %>
+  <!-- Search & Filter Form -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form action="/members" method="GET" class="row g-2 align-items-center">
+      <div class="col-12 col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0 text-secondary">
+            <i class="bi bi-search" aria-hidden="true"></i>
+          </span>
+          <input
+            type="search"
+            name="q"
+            class="form-control border-start-0 ps-0"
+            placeholder="Search by name, email, or phone..."
+            value="<%= query %>"
+            aria-label="Search members"
+          />
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <select name="type" class="form-select" aria-label="Filter by member type">
+          <option value="all" <%= selectedType === 'all' ? 'selected' : '' %>>All Types</option>
+          <option value="student" <%= selectedType === 'student' ? 'selected' : '' %>>Student</option>
+          <option value="faculty" <%= selectedType === 'faculty' ? 'selected' : '' %>>Faculty</option>
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <select name="status" class="form-select" aria-label="Filter by status">
+          <option value="all" <%= selectedStatus === 'all' ? 'selected' : '' %>>All Status</option>
+          <option value="active" <%= selectedStatus === 'active' ? 'selected' : '' %>>Active</option>
+          <option value="suspended" <%= selectedStatus === 'suspended' ? 'selected' : '' %>>Suspended</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-success flex-grow-1">Filter</button>
+        <% if (hasFilter) { %>
+          <a href="/members" class="btn btn-outline-secondary" title="Clear filters">Clear</a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results counter line -->
+  <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+    <div class="small text-secondary">
+      <% if (hasFilter) { %>
+        Found <strong><%= totItems %></strong> matching <%= totItems === 1 ? 'member' : 'members' %>
+      <% } else { %>
+        Showing <%= membersList.length %> <%= membersList.length === 1 ? 'member' : 'members' %>
+      <% } %>
+    </div>
+  </div>
 
   <!-- Responsive table -->
-  <div class="table-responsive border rounded-3 shadow-sm">
+  <div class="table-responsive border rounded-3 shadow-sm bg-white">
     <table class="table table-hover table-striped align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th scope="col" class="ps-3 text-secondary small text-center">S.No.</th>
+          <th scope="col" class="ps-3 text-secondary small text-center" style="width: 60px;">S.No.</th>
           <th scope="col">Name</th>
           <th scope="col">Email</th>
           <th scope="col" class="text-center">Phone</th>
           <th scope="col" class="text-center">Type</th>
           <th scope="col" class="text-center">Status</th>
           <th scope="col" class="text-center">Active Loans</th>
-          <th scope="col" class="pe-3 text-center">Action</th>
+          <th scope="col" class="pe-3 text-center" style="width: 90px;">Action</th>
         </tr>
       </thead>
       <tbody>
-        <% if (members.length > 0) { %>
-          <% members.forEach((member, index) => { %>
+        <% if (membersList.length > 0) { %>
+          <% membersList.forEach((member, index) => { %>
             <%
               const max = maxLoansFor(member.member_type);
               const active = Number(member.active_loans) || 0;
               const isActive = member.status === 'active';
+              const serialNo = (curPage - 1) * itemLimit + index + 1;
             %>
             <tr>
-              <td class="ps-3 text-center text-secondary small"><%= index + 1 %></td>
+              <td class="ps-3 text-center text-secondary small"><%= serialNo %></td>
 
-              <td class="fw-semibold"><%= member.name %></td>
+              <td class="fw-semibold">
+                <a href="/members/<%= member.member_id %>" class="text-decoration-none text-dark">
+                  <%= member.name %>
+                </a>
+              </td>
 
               <td><%= member.email || '—' %></td>
 
               <td class="font-monospace small text-nowrap text-secondary text-center">
-                <%= member.phone || '—' %>
+                <% if (member.phone) { %>
+                  <a href="tel:<%= member.phone %>" class="text-decoration-none text-secondary"><%= member.phone %></a>
+                <% } else { %>
+                  —
+                <% } %>
               </td>
 
               <td class="text-center">
@@ -64,11 +138,12 @@
 
               <td class="text-center">
                 <span
-                  class="d-inline-block rounded-circle align-middle <%= isActive ? 'bg-success' : 'bg-danger' %>"
+                  class="d-inline-block rounded-circle align-middle <%= isActive ? 'bg-success' : 'bg-danger' %> me-1"
                   style="width:10px;height:10px;"
-                  title="<%= isActive ? 'Active' : 'Suspended' %>"
                 ></span>
-                <span class="visually-hidden"><%= isActive ? 'Active' : 'Suspended' %></span>
+                <span class="small <%= isActive ? 'text-success' : 'text-danger' %>">
+                  <%= isActive ? 'Active' : 'Suspended' %>
+                </span>
               </td>
 
               <td class="text-center">
@@ -78,8 +153,8 @@
               </td>
 
               <td class="pe-3 text-center">
-                <a href="/members/<%= member.member_id %>">
-                    <button class="btn btn-outline-secondary">View</button>
+                <a href="/members/<%= member.member_id %>" class="btn btn-outline-secondary btn-sm px-3">
+                  View
                 </a>
               </td>
             </tr>
@@ -88,7 +163,13 @@
           <tr>
             <td colspan="8" class="text-center py-5">
               <div class="fw-semibold mb-1">No members found</div>
-              <div class="text-secondary small">No members have been registered yet.</div>
+              <div class="text-secondary small">
+                <% if (hasFilter) { %>
+                  No members matched your search criteria. <a href="/members">Clear filter</a>.
+                <% } else { %>
+                  No members have been registered yet. <a href="/members/new">Register a member</a>.
+                <% } %>
+              </div>
             </td>
           </tr>
         <% } %>
@@ -97,14 +178,24 @@
   </div>
 
   <!-- Status legend -->
-  <div class="d-flex flex-wrap gap-3 mt-3 small text-secondary">
-    <span>
-      <span class="d-inline-block rounded-circle bg-success align-middle" style="width:10px;height:10px;"></span>
-      Active
-    </span>
-    <span>
-      <span class="d-inline-block rounded-circle bg-danger align-middle" style="width:10px;height:10px;"></span>
-      Suspended
-    </span>
+  <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+    <div class="d-flex flex-wrap gap-3 small text-secondary">
+      <span>
+        <span class="d-inline-block rounded-circle bg-success align-middle" style="width:10px;height:10px;"></span>
+        Active
+      </span>
+      <span>
+        <span class="d-inline-block rounded-circle bg-danger align-middle" style="width:10px;height:10px;"></span>
+        Suspended
+      </span>
+      <span>
+        <span class="badge rounded-pill text-bg-warning fw-normal">Limit</span>
+        Borrowing limit reached
+      </span>
+    </div>
   </div>
+
+  <!-- Pagination -->
+  <%- include('../components/pagination', { page: curPage, totalPages: totPages, total: totItems, limit: itemLimit, params: { q: query, type: selectedType, status: selectedStatus } }) %>
+
 </div>

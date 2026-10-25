@@ -1,79 +1,163 @@
 <% layout('/layout/boilerplate') %>
+
+<%
+  const curQ = typeof q !== 'undefined' ? q : '';
+  const curCat = typeof category !== 'undefined' ? String(category) : '';
+  const curAvail = typeof availability !== 'undefined' ? String(availability) : '';
+  const catList = (typeof categories !== 'undefined' && Array.isArray(categories)) ? categories : [];
+  const bookList = (typeof books !== 'undefined' && Array.isArray(books)) ? books : [];
+  const totBooks = typeof total !== 'undefined' ? Number(total) : bookList.length;
+  const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+  const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+  const hasActiveFilters = curQ !== '' || curCat !== '' || curAvail !== '';
+%>
+
 <div class="books-page container py-4 py-lg-5">
 
-  <!-- Page heading -->
+  <!-- Page heading & Add button -->
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
       <h1 class="h3 fw-bold mb-1">Book Catalog</h1>
       <p class="text-secondary mb-0">
-        Browse the books available in the library.
+        Browse and search titles available in the library collection.
       </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill text-bg-light border px-3 py-2">
-        <%= books.length %> books
+      <span class="badge rounded-pill text-bg-light border px-3 py-2 text-dark">
+        <%= totBooks %> <%= totBooks === 1 ? 'book' : 'books' %>
       </span>
-      <a href="/books/new" class="btn btn-success btn-sm px-3" title="Add Book" aria-label="Add Book">
-        <span aria-hidden="true">+</span>
+      <a href="/books/new" class="btn btn-success d-inline-flex align-items-center gap-2 px-3 py-2" title="Add Book">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span>Add Book</span>
       </a>
     </div>
   </div>
 
+  <!-- Search & Filter Card -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3 p-lg-4">
+      <form action="/books" method="GET" class="row g-3 align-items-end">
+        <!-- Search query -->
+        <div class="col-12 col-md-5">
+          <label for="bookSearchInput" class="form-label small fw-semibold text-secondary mb-1">Search Catalog</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-secondary">
+              <i class="bi bi-search" aria-hidden="true"></i>
+            </span>
+            <input
+              type="search"
+              class="form-control border-start-0 ps-0"
+              id="bookSearchInput"
+              name="q"
+              value="<%= curQ %>"
+              placeholder="Title, author, or 13-digit ISBN..."
+              aria-label="Search by title, author, or ISBN"
+            >
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label for="categoryFilter" class="form-label small fw-semibold text-secondary mb-1">Category</label>
+          <select class="form-select" id="categoryFilter" name="category" aria-label="Filter by category">
+            <option value="" <%= curCat === '' ? 'selected' : '' %>>All Categories</option>
+            <% catList.forEach((c) => { %>
+              <option value="<%= c.category_id %>" <%= curCat === String(c.category_id) ? 'selected' : '' %>>
+                <%= c.category_name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <!-- Availability Filter -->
+        <div class="col-12 col-sm-6 col-md-2">
+          <label for="availabilityFilter" class="form-label small fw-semibold text-secondary mb-1">Availability</label>
+          <select class="form-select" id="availabilityFilter" name="availability" aria-label="Filter by availability">
+            <option value="" <%= curAvail === '' ? 'selected' : '' %>>All Stock</option>
+            <option value="available" <%= curAvail === 'available' ? 'selected' : '' %>>In Stock</option>
+            <option value="unavailable" <%= curAvail === 'unavailable' ? 'selected' : '' %>>Out of Stock</option>
+          </select>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-brand w-100 fw-semibold">
+            Filter
+          </button>
+          <% if (hasActiveFilters) { %>
+            <a href="/books" class="btn btn-outline-secondary" title="Reset all filters" aria-label="Clear filters">
+              Clear
+            </a>
+          <% } %>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Search Result Summary -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="small text-secondary">
+      <% if (hasActiveFilters) { %>
+        Found <strong class="text-dark"><%= totBooks %></strong> <%= totBooks === 1 ? 'matching book' : 'matching books' %>
+      <% } else { %>
+        Showing <strong class="text-dark"><%= totBooks %></strong> total <%= totBooks === 1 ? 'book' : 'books' %>
+      <% } %>
+    </div>
+  </div>
+
   <!-- Responsive table -->
-  <div class="table-responsive border rounded-3 shadow-sm">
+  <div class="table-responsive border rounded-3 shadow-sm bg-white">
     <table class="table table-hover table-striped align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th scope="col" class="ps-3 text-secondary small text-center">S.No.</th>
-          <th scope="col">Book Name</th>
+          <th scope="col" class="ps-3 text-secondary small text-center" style="width: 60px;">S.No.</th>
+          <th scope="col">Book Title</th>
           <th scope="col">Author</th>
-          <th scope="col">Publisher</th>
-          <th scope="col" class="text-center">ISBN</th>
-          <!-- <th scope="col" class="text-center">Category</th> -->
+          <th scope="col" class="d-none d-md-table-cell">Publisher</th>
+          <th scope="col" class="text-center font-monospace small">ISBN</th>
+          <th scope="col" class="text-center">Category</th>
           <th scope="col" class="text-center" title="Available copies / total copies">In Stock</th>
-          <th scope="col" class="pe-3 text-center">Action</th>
+          <th scope="col" class="pe-3 text-center" style="width: 90px;">Action</th>
         </tr>
       </thead>
       <tbody>
-        <% if (books.length > 0) { %>
-          <% books.forEach((book, index) => { %>
-            <%
-              const available = Number(book.available_copies) || 0;
-              const hasTotal = book.total_copies !== undefined && book.total_copies !== null;
-              const total = Number(book.total_copies) || 0;
-              const inStock = available > 0;
-            %>
+        <% if (bookList.length > 0) { %>
+          <% bookList.forEach((book, index) => {
+            const available = Number(book.available_copies) || 0;
+            const hasTotal = book.total_copies !== undefined && book.total_copies !== null;
+            const totalCopies = Number(book.total_copies) || 0;
+            const inStock = available > 0;
+            const sno = (curPage - 1) * itemLimit + index + 1;
+          %>
             <tr>
-              <td class="ps-3 text-center text-secondary small"><%= index + 1 %></td>
-
-              <td class="fw-semibold"><%= book.title %></td>
-
+              <td class="ps-3 text-center text-secondary small"><%= sno %></td>
+              <td class="fw-semibold">
+                <a href="/books/<%= book.book_id %>" class="link-subtle">
+                  <%= book.title %>
+                </a>
+              </td>
               <td><%= book.author %></td>
-              
-              <td><%= book.publisher || '—' %></td>
-
+              <td class="d-none d-md-table-cell text-secondary"><%= book.publisher || '—' %></td>
               <td class="font-monospace small text-nowrap text-secondary text-center">
                 <%= book.isbn %>
               </td>
-
-
-              <!-- <td class="text-center">
+              <td class="text-center">
                 <span class="badge rounded-pill text-bg-light border text-dark fw-normal">
-                  <%= book.category_name %>
+                  <%= book.category_name || 'General' %>
                 </span>
-              </td> -->
-
+              </td>
               <td class="text-center">
                 <span
                   class="badge rounded-pill <%= inStock ? 'text-bg-success' : 'text-bg-danger' %>"
-                  title="<%= available %> available<%= hasTotal ? ' of ' + total + ' total' : '' %>"
+                  title="<%= available %> available<%= hasTotal ? ' of ' + totalCopies + ' total' : '' %>"
                 >
-                  <%= available %><%= hasTotal ? ' / ' + total : '' %>
+                  <%= available %><%= hasTotal ? ' / ' + totalCopies : '' %>
                 </span>
               </td>
-
               <td class="pe-3 text-center">
-                <a href="/books/<%= book.book_id %>" class="btn btn-outline-secondary btn-sm">View</a>
+                <a href="/books/<%= book.book_id %>" class="btn btn-outline-secondary btn-sm">
+                  View
+                </a>
               </td>
             </tr>
           <% }) %>
@@ -81,60 +165,32 @@
           <tr>
             <td colspan="8" class="text-center py-5">
               <div class="fw-semibold mb-1">No books found</div>
-              <div class="text-secondary small">The catalog is currently empty.</div>
+              <div class="text-secondary small mb-3">
+                <% if (hasActiveFilters) { %>
+                  No catalog items match your search criteria. Try adjusting your query or filters.
+                <% } else { %>
+                  The library catalog is currently empty.
+                <% } %>
+              </div>
+              <% if (hasActiveFilters) { %>
+                <a href="/books" class="btn btn-outline-secondary btn-sm">Reset Filters</a>
+              <% } else { %>
+                <a href="/books/new" class="btn btn-success btn-sm">Add First Book</a>
+              <% } %>
             </td>
           </tr>
         <% } %>
       </tbody>
     </table>
   </div>
-<% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-  <%
-    const current = Number(page) || 1;
 
-    // optional: keep search/filter values in every link (only if your route passes them)
-    const params = new URLSearchParams();
-    if (locals.q) params.set('q', q);
-    if (locals.type) params.set('type', type);
-    if (locals.status) params.set('status', status);
-    const extra = params.toString() ? '&' + params.toString() : '';
+  <!-- Reusable Pagination Component -->
+  <%- include('../components/pagination', {
+    page: curPage,
+    totalPages: typeof totalPages !== 'undefined' ? totalPages : 1,
+    total: totBooks,
+    limit: itemLimit,
+    params: { q: curQ, category: curCat, availability: curAvail }
+  }) %>
 
-    // show current page +/- 2, plus first and last
-    const pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || Math.abs(i - current) <= 2) pages.push(i);
-    }
-  %>
-
-  <nav aria-label="Page navigation" class="mt-4">
-    <ul class="pagination pagination-sm justify-content-center mb-2">
-
-      <!-- Previous -->
-      <li class="page-item <%= current <= 1 ? 'disabled' : '' %>">
-        <a class="page-link" href="?page=<%= current - 1 %><%= extra %>">&laquo; Prev</a>
-      </li>
-
-      <!-- Page numbers -->
-      <% let last = 0; %>
-      <% pages.forEach((p) => { %>
-        <% if (p - last > 1) { %>
-          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-        <% } %>
-        <li class="page-item <%= p === current ? 'active' : '' %>">
-          <a class="page-link" href="?page=<%= p %><%= extra %>"
-             <%= p === current ? 'aria-current="page"' : '' %>><%= p %></a>
-        </li>
-        <% last = p; %>
-      <% }) %>
-
-      <!-- Next -->
-      <li class="page-item <%= current >= totalPages ? 'disabled' : '' %>">
-        <a class="page-link" href="?page=<%= current + 1 %><%= extra %>">Next &raquo;</a>
-      </li>
-    </ul>
-    <div class="text-center small text-secondary">
-      Page <%= current %> of <%= totalPages %>
-    </div>
-  </nav>
-<% } %>
 </div>

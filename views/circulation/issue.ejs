@@ -8,6 +8,8 @@
     const due = new Date();
     due.setDate(due.getDate() + 14);
 
+    const membersList = (typeof members !== 'undefined' && Array.isArray(members)) ? members : [];
+    const booksList = (typeof books !== 'undefined' && Array.isArray(books)) ? books : [];
     const maxLoansFor = (type) => (type === 'faculty' ? 5 : 3);
     const preMember = String(typeof selectedMemberId !== 'undefined' && selectedMemberId ? selectedMemberId : '');
     const preBook = String(typeof selectedBookId !== 'undefined' && selectedBookId ? selectedBookId : '');
@@ -16,8 +18,8 @@
 
   <!-- Back navigation -->
   <div class="mb-4">
-    <a href="/" class="btn btn-outline-secondary btn-sm">
-      <span aria-hidden="true">&larr;</span> Back to Home
+    <a href="/circulation" class="btn btn-outline-secondary btn-sm">
+      <span aria-hidden="true">&larr;</span> Back to Circulation
     </a>
   </div>
 
@@ -27,9 +29,25 @@
     <p class="text-secondary mb-0">Select a member and a book, then review the loan before confirming.</p>
   </div>
 
-  <% if (members.length === 0 || books.length === 0) { %>
+  <!-- Pre-selection alert if navigated from member/book details -->
+  <% if (preMember || preBook) { %>
+    <div class="alert alert-info border-0 shadow-sm rounded-3 py-2 px-3 mb-4 d-flex align-items-center gap-2 small">
+      <i class="bi bi-info-circle-fill text-info"></i>
+      <div>
+        <% if (preMember && preBook) { %>
+          Pre-selected Member #<%= preMember %> and Book #<%= preBook %>.
+        <% } else if (preMember) { %>
+          Pre-selected Member #<%= preMember %>. Please select a book to issue.
+        <% } else { %>
+          Pre-selected Book #<%= preBook %>. Please select a member to borrow.
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (membersList.length === 0 || booksList.length === 0) { %>
     <div class="alert alert-warning">
-      <% if (members.length === 0) { %>
+      <% if (membersList.length === 0) { %>
         No members are registered yet. <a href="/members/new">Register a member</a> first.
       <% } else { %>
         No books are in the catalog yet. <a href="/books/new">Add a book</a> first.
@@ -54,7 +72,7 @@
           </div>
 
           <div class="list-group list-group-flush overflow-auto" style="max-height:300px;" id="memberList">
-            <% members.forEach((m) => {
+            <% membersList.forEach((m) => {
               const max = maxLoansFor(m.member_type);
               const active = Number(m.active_loans) || 0;
               const suspended = m.status !== 'active';
@@ -109,7 +127,7 @@
           </div>
 
           <div class="list-group list-group-flush overflow-auto" style="max-height:300px;" id="bookList">
-            <% books.forEach((b) => {
+            <% booksList.forEach((b) => {
               const available = Number(b.available_copies) || 0;
               const total = Number(b.total_copies) || 0;
               const out = available <= 0;
@@ -181,7 +199,7 @@
 
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-success" id="issueBtn" disabled>Confirm &amp; Issue Book</button>
-              <a href="/" class="btn btn-outline-secondary">Cancel</a>
+              <a href="/circulation" class="btn btn-outline-secondary">Cancel</a>
             </div>
           </div>
         </div>

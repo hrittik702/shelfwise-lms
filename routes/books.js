@@ -5,12 +5,52 @@ const db = require('../config/db.js');
 const { resolve } = require('path');
 
 // View All Books
+const { getPage, pageInfo, likeTerm } = require('../utils/paginate');
+
 router.get(
   '/',
   wrapAsync(async (req, res) => {
-    const sql = `SELECT * from book_details`;
-    const [books] = await db.query(sql);
-    res.render('books/books.ejs', { books });
+    const q = String(req.query.q || '')
+      .trim()
+      .slice(0, 50);
+    const catId = Number.parseInt(req.query.category, 10);
+    const category = Number.isSafeInteger(catId) && catId > 0 ? catId : '';
+    const availability = ['available', 'out'].includes(req.query.availability)
+      ? req.query.availability
+      : 'all';
+
+    const where = [];
+    const params = [];
+    if (q) {
+      const t = likeTerm(q);
+      where.push('(b.title LIKE ? OR b.author LIKE ? OR b.isbn LIKE ? OR c.category_name LIKE ?)');
+      params.push(t, t, t, t);
+    }
+    if (category) {
+      where.push('b.category_id = ?');
+      params.push(category);
+    }
+    if (availability === 'available') where.push('b.available_copies > 0');
+    if (availability === 'out') where.push('b.available_copies = 0');
+
+    const from = `FROM books b JOIN category c ON c.category_id = b.category_id
+                ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`;
+
+    const [[{ total }]] = await db.query(`SELECT COUNT(*) AS total ${from}`, params);
+    const pg = pageInfo(total, getPage(req));
+
+    const [books] = await db.query(
+      `SELECT b.book_id, b.isbn, b.title, b.author, b.publisher, b.pub_year,
+            b.available_copies, b.total_copies, c.category_name
+     ${from} ORDER BY b.title LIMIT ? OFFSET ?`,
+      [...params, pg.limit, pg.offset]
+    );
+
+    const [categories] = await db.query(
+      'SELECT category_id, category_name FROM category ORDER BY category_name'
+    );
+
+    res.render('books/books.ejs', { books, categories, q, category, availability, ...pg });
   })
 );
 
@@ -27,17 +67,34 @@ router.get(
   })
 );
 
-// view single book
+// keep /new above this route
 router.get(
   '/:book_id',
   wrapAsync(async (req, res) => {
-    const sql = `SELECT * FROM book_details WHERE book_id = ?`;
-    const [rows] = await db.query(sql, [req.params.book_id]);
-    const book = rows[0];
-    if (!book) {
-      return res.status(404).send('Book not found');
-    }
-    res.render('books/view.ejs', { book });
+    const id = Number(req.params.book_id);
+    if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).send('Invalid book ID');
+
+    const [rows] = await db.query(
+      `SELECT b.*, c.category_name FROM books b
+     JOIN category c ON c.category_id = b.category_id WHERE b.book_id = ?`,
+      [id]
+    );
+    if (!rows[0]) return res.status(404).send('Book not found');
+
+    const [activeLoans] = await db.query(
+      `SELECT i.issue_id, m.member_id, m.name AS member_name, m.member_type,
+            i.issue_date, i.due_date, DATEDIFF(CURDATE(), i.due_date) AS days_overdue
+     FROM issue i JOIN members m ON m.member_id = i.member_id
+     WHERE i.book_id = ? AND i.return_date IS NULL ORDER BY i.due_date`,
+      [id]
+    );
+
+    const [[{ loanCount }]] = await db.query(
+      'SELECT COUNT(*) AS loanCount FROM issue WHERE book_id = ?',
+      [id]
+    );
+
+    res.render('books/view.ejs', { book: rows[0], activeLoans, loanCount });
   })
 );
 
@@ -79,13 +136,22 @@ router.get(
   })
 );
 
-// -[ ] : Error -> Delete must be method override or POST
-router.get(
+router.post(
   '/:book_id/delete',
   wrapAsync(async (req, res) => {
-    const book_id = req.params.book_id;
-    const sql = `delete from books where book_id = ?`;
-    await db.query(sql, [book_id]);
+    const id = Number(req.params.book_id);
+    if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).send('Invalid book ID');
+
+    const [[{ loanCount }]] = await db.query(
+      'SELECT COUNT(*) AS loanCount FROM issue WHERE book_id = ?',
+      [id]
+    );
+    if (loanCount > 0) {
+      req.flash('error', 'This book has loan history and cannot be deleted.');
+      return res.redirect(`/books/${id}`);
+    }
+    await db.query('DELETE FROM books WHERE book_id = ?', [id]);
+    req.flash('success', 'Book deleted.');
     res.redirect('/books');
   })
 );

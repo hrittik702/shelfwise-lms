@@ -6,77 +6,127 @@
       ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       : '—';
     const FINE_PER_DAY = 2;
-    const overdueCount = issues.filter((i) => Number(i.days_overdue) > 0).length;
-    const dueTodayCount = issues.filter((i) => Number(i.days_overdue) === 0).length;
+
+    const issueList = (typeof issues !== 'undefined' && Array.isArray(issues)) ? issues : [];
+    const activeFilter = typeof filter !== 'undefined' ? filter : 'all';
+    const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+    const totPages = Number(typeof totalPages !== 'undefined' ? totalPages : 1) || 1;
+    const totItems = Number(typeof total !== 'undefined' ? total : issueList.length) || 0;
+    const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+
+    const overdueCount = issueList.filter((i) => Number(i.days_overdue) > 0).length;
+    const dueTodayCount = issueList.filter((i) => Number(i.days_overdue) === 0).length;
   %>
 
   <!-- Page heading -->
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
       <h1 class="h3 fw-bold mb-1">Circulation</h1>
-      <p class="text-secondary mb-0">Books currently issued to members.</p>
+      <p class="text-secondary mb-0">Manage active book loans, returns, and track dues.</p>
     </div>
-    <a href="/circulation/issue" class="btn btn-success px-4">
-      <span aria-hidden="true">+</span> New Transaction
-    </a>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/circulation/issue" class="btn btn-success px-3">
+        <span aria-hidden="true">+</span> Issue Book
+      </a>
+      <a href="/circulation/return" class="btn btn-outline-success px-3">
+        Return Desk
+      </a>
+      <a href="/circulation/overdue" class="btn btn-outline-danger px-3">
+        Overdue
+      </a>
+      <a href="/circulation/fines" class="btn btn-outline-secondary px-3">
+        Fines
+      </a>
+    </div>
   </div>
 
-  <!-- Summary -->
+  <!-- Summary Cards -->
   <div class="row g-3 mb-4">
     <div class="col-12 col-md-4">
-      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-        <div class="text-secondary small">Currently Issued</div>
-        <div class="fs-3 fw-bold"><%= issues.length %></div>
-      </div>
+      <a href="/circulation?filter=all" class="text-decoration-none">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white <%= activeFilter === 'all' ? 'border border-success border-2' : '' %>">
+          <div class="text-secondary small">Total Active Loans</div>
+          <div class="fs-3 fw-bold text-dark"><%= totItems %></div>
+        </div>
+      </a>
     </div>
     <div class="col-12 col-md-4">
-      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-        <div class="text-secondary small">Overdue</div>
-        <div class="fs-3 fw-bold <%= overdueCount > 0 ? 'text-danger' : '' %>"><%= overdueCount %></div>
-      </div>
+      <a href="/circulation?filter=overdue" class="text-decoration-none">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white <%= activeFilter === 'overdue' ? 'border border-danger border-2' : '' %>">
+          <div class="text-secondary small">Overdue Loans</div>
+          <div class="fs-3 fw-bold <%= overdueCount > 0 ? 'text-danger' : 'text-dark' %>"><%= overdueCount %></div>
+        </div>
+      </a>
     </div>
     <div class="col-12 col-md-4">
-      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-        <div class="text-secondary small">Due Today</div>
-        <div class="fs-3 fw-bold <%= dueTodayCount > 0 ? 'text-warning-emphasis' : '' %>"><%= dueTodayCount %></div>
-      </div>
+      <a href="/circulation?filter=today" class="text-decoration-none">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white <%= activeFilter === 'today' ? 'border border-warning border-2' : '' %>">
+          <div class="text-secondary small">Due Today</div>
+          <div class="fs-3 fw-bold <%= dueTodayCount > 0 ? 'text-warning' : 'text-dark' %>"><%= dueTodayCount %></div>
+        </div>
+      </a>
     </div>
   </div>
 
+  <!-- Filter tabs -->
+  <ul class="nav nav-pills mb-3 gap-2">
+    <li class="nav-item">
+      <a class="nav-link <%= activeFilter === 'all' ? 'active bg-success' : 'text-secondary bg-white border' %>" href="/circulation?filter=all">
+        All Loans (<%= totItems %>)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <%= activeFilter === 'overdue' ? 'active bg-danger' : 'text-secondary bg-white border' %>" href="/circulation?filter=overdue">
+        Overdue (<%= overdueCount %>)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <%= activeFilter === 'today' ? 'active bg-warning text-dark' : 'text-secondary bg-white border' %>" href="/circulation?filter=today">
+        Due Today (<%= dueTodayCount %>)
+      </a>
+    </li>
+  </ul>
+
   <!-- Responsive table -->
-  <div class="table-responsive border rounded-3 shadow-sm">
+  <div class="table-responsive border rounded-3 shadow-sm bg-white">
     <table class="table table-hover table-striped align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th scope="col" class="ps-3 text-secondary small text-center">S.No.</th>
+          <th scope="col" class="ps-3 text-secondary small text-center" style="width: 60px;">S.No.</th>
           <th scope="col">Book</th>
           <th scope="col">Member</th>
           <th scope="col" class="text-center">Issued</th>
-          <th scope="col" class="text-center">Due</th>
+          <th scope="col" class="text-center">Due Date</th>
           <th scope="col" class="text-center">Status</th>
           <th scope="col" class="text-end">Est. Fine</th>
-          <th scope="col" class="pe-3">Issued By</th>
+          <th scope="col">Issued By</th>
+          <th scope="col" class="pe-3 text-center" style="width: 100px;">Action</th>
         </tr>
       </thead>
       <tbody>
-        <% if (issues.length > 0) { %>
-          <% issues.forEach((issue, index) => {
-            const days = Number(issue.days_overdue);
+        <% if (issueList.length > 0) { %>
+          <% issueList.forEach((issue, index) => {
+            const days = Number(issue.days_overdue) || 0;
             const fine = days > 0 ? days * FINE_PER_DAY : 0;
+            const serialNo = (curPage - 1) * itemLimit + index + 1;
           %>
             <tr>
-              <td class="ps-3 text-center text-secondary small"><%= index + 1 %></td>
+              <td class="ps-3 text-center text-secondary small"><%= serialNo %></td>
 
               <td class="fw-semibold">
-  <a href="/books/<%= issue.book_id %>" class="link-subtle"><%= issue.book_title %></a>
-</td>
+                <a href="/books/<%= issue.book_id %>" class="text-decoration-none text-dark">
+                  <%= issue.book_title %>
+                </a>
+              </td>
 
-<td>
-  <a href="/members/<%= issue.member_id %>" class="link-subtle"><%= issue.member_name %></a>
-  <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
-    <%= issue.member_type %>
-  </span>
-</td>
+              <td>
+                <a href="/members/<%= issue.member_id %>" class="text-decoration-none text-dark fw-medium">
+                  <%= issue.member_name %>
+                </a>
+                <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
+                  <%= issue.member_type %>
+                </span>
+              </td>
 
               <td class="text-center small text-nowrap"><%= fmt(issue.issue_date) %></td>
               <td class="text-center small text-nowrap"><%= fmt(issue.due_date) %></td>
@@ -95,15 +145,25 @@
                 <%= fine > 0 ? '₹' + fine : '—' %>
               </td>
 
-              <td class="pe-3 small text-secondary"><%= issue.staff_name %></td>
+              <td class="small text-secondary"><%= issue.staff_name || '—' %></td>
+
+              <td class="pe-3 text-center">
+                <a href="/circulation/return?issue_id=<%= issue.issue_id %>" class="btn btn-outline-success btn-sm px-3">
+                  Return
+                </a>
+              </td>
             </tr>
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="8" class="text-center py-5">
-              <div class="fw-semibold mb-1">No books are currently issued</div>
+            <td colspan="9" class="text-center py-5">
+              <div class="fw-semibold mb-1">No active loans found</div>
               <div class="text-secondary small">
-                Start with <a href="/circulation/issue">a new transaction</a>.
+                <% if (activeFilter !== 'all') { %>
+                  No records match the selected filter. <a href="/circulation">View all active loans</a>.
+                <% } else { %>
+                  No books are currently issued. Start by <a href="/circulation/issue">issuing a book</a>.
+                <% } %>
               </div>
             </td>
           </tr>
@@ -112,7 +172,13 @@
     </table>
   </div>
 
-  <div class="small text-secondary mt-3">
-    Estimated fine is calculated up to today at ₹2 per day. The final fine is recorded when the book is returned.
+  <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+    <div class="small text-secondary">
+      Estimated fine is calculated up to today at ₹2 per day. The final fine is recorded when the book is returned.
+    </div>
   </div>
+
+  <!-- Pagination -->
+  <%- include('../components/pagination', { page: curPage, totalPages: totPages, total: totItems, limit: itemLimit, params: { filter: activeFilter } }) %>
+
 </div>

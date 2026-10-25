@@ -1,0 +1,195 @@
+<% layout('/layout/boilerplate') %>
+
+<div class="container py-4 py-lg-5">
+
+  <%
+    const fmt = (d) => d
+      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+
+    const fineList = (typeof fines !== 'undefined' && Array.isArray(fines)) ? fines : [];
+    const activeStatus = typeof status !== 'undefined' ? status : 'unpaid';
+    const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+    const totPages = Number(typeof totalPages !== 'undefined' ? totalPages : 1) || 1;
+    const totItems = Number(typeof total !== 'undefined' ? total : fineList.length) || 0;
+    const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+
+    let computedUnpaid = 0;
+    let computedCollected = 0;
+    fineList.forEach((f) => {
+      const amt = Number(f.amount) || 0;
+      if (f.status === 'paid') computedCollected += amt;
+      else computedUnpaid += amt;
+    });
+
+    const unpaidTotal = typeof totals !== 'undefined' && typeof totals.unpaid !== 'undefined' ? totals.unpaid : computedUnpaid;
+    const collectedTotal = typeof totals !== 'undefined' && typeof totals.collected !== 'undefined' ? totals.collected : computedCollected;
+  %>
+
+  <!-- Back navigation -->
+  <div class="mb-4">
+    <a href="/circulation" class="btn btn-outline-secondary btn-sm">
+      <span aria-hidden="true">&larr;</span> Back to Circulation
+    </a>
+  </div>
+
+  <!-- Page heading -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Fines &amp; Penalties</h1>
+      <p class="text-secondary mb-0">Record and collect overdue fees for returned or late books.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/circulation/return" class="btn btn-outline-success px-3">
+        Return Desk
+      </a>
+      <a href="/circulation/overdue" class="btn btn-outline-danger px-3">
+        Overdue Loans
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Tiles -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+      <a href="/circulation/fines?status=unpaid" class="text-decoration-none">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-danger border-4">
+          <div class="text-secondary small">Outstanding Dues (Unpaid)</div>
+          <div class="fs-3 fw-bold text-danger">₹<%= unpaidTotal %></div>
+          <div class="small text-secondary">Fines waiting to be collected from members</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-12 col-md-6">
+      <a href="/circulation/fines?status=paid" class="text-decoration-none">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-success border-4">
+          <div class="text-secondary small">Total Collected (Paid)</div>
+          <div class="fs-3 fw-bold text-success">₹<%= collectedTotal %></div>
+          <div class="small text-secondary">Successfully cleared fines</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Status Tabs -->
+  <ul class="nav nav-pills mb-3 gap-2">
+    <li class="nav-item">
+      <a class="nav-link <%= activeStatus === 'unpaid' ? 'active bg-danger' : 'text-secondary bg-white border' %>" href="/circulation/fines?status=unpaid">
+        Unpaid Fines
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <%= activeStatus === 'paid' ? 'active bg-success' : 'text-secondary bg-white border' %>" href="/circulation/fines?status=paid">
+        Paid Fines
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <%= activeStatus === 'all' ? 'active bg-secondary' : 'text-secondary bg-white border' %>" href="/circulation/fines?status=all">
+        All Records (<%= totItems %>)
+      </a>
+    </li>
+  </ul>
+
+  <!-- Fines Table -->
+  <div class="table-responsive border rounded-3 shadow-sm bg-white">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="ps-3 text-secondary small text-center" style="width: 60px;">S.No.</th>
+          <th scope="col" class="small text-secondary" style="width: 80px;">Fine ID</th>
+          <th scope="col">Member</th>
+          <th scope="col">Book / Transaction</th>
+          <th scope="col" class="text-end">Amount</th>
+          <th scope="col" class="text-center">Status</th>
+          <th scope="col" class="text-center">Date</th>
+          <th scope="col" class="pe-3 text-center" style="width: 120px;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (fineList.length > 0) { %>
+          <% fineList.forEach((fine, index) => {
+            const isPaid = fine.status === 'paid';
+            const serialNo = (curPage - 1) * itemLimit + index + 1;
+          %>
+            <tr>
+              <td class="ps-3 text-center text-secondary small"><%= serialNo %></td>
+
+              <td class="font-monospace small text-secondary">
+                #<%= fine.fine_id %>
+              </td>
+
+              <td>
+                <% if (fine.member_id) { %>
+                  <a href="/members/<%= fine.member_id %>" class="text-decoration-none text-dark fw-medium">
+                    <%= fine.member_name || ('Member #' + fine.member_id) %>
+                  </a>
+                <% } else { %>
+                  <%= fine.member_name || '—' %>
+                <% } %>
+                <% if (fine.member_type) { %>
+                  <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
+                    <%= fine.member_type %>
+                  </span>
+                <% } %>
+              </td>
+
+              <td>
+                <% if (fine.book_id) { %>
+                  <a href="/books/<%= fine.book_id %>" class="text-decoration-none text-dark">
+                    <%= fine.book_title || ('Book #' + fine.book_id) %>
+                  </a>
+                <% } else { %>
+                  <%= fine.book_title || (fine.issue_id ? 'Issue #' + fine.issue_id : 'Overdue fine') %>
+                <% } %>
+              </td>
+
+              <td class="text-end font-monospace fw-bold <%= isPaid ? 'text-secondary' : 'text-danger' %>">
+                ₹<%= fine.amount %>
+              </td>
+
+              <td class="text-center">
+                <span class="badge rounded-pill <%= isPaid ? 'text-bg-success' : 'text-bg-danger' %>">
+                  <%= isPaid ? 'Paid' : 'Unpaid' %>
+                </span>
+              </td>
+
+              <td class="text-center small text-secondary text-nowrap">
+                <%= fmt(fine.paid_at || fine.created_at) %>
+              </td>
+
+              <td class="pe-3 text-center">
+                <% if (!isPaid) { %>
+                  <form action="/circulation/fines/<%= fine.fine_id %>/pay" method="POST"
+                        onsubmit="return confirm('Collect ₹<%= fine.amount %> from <%= fine.member_name || 'member' %> and mark this fine as paid?');">
+                    <button type="submit" class="btn btn-success btn-sm px-3 text-nowrap">
+                      Mark Paid
+                    </button>
+                  </form>
+                <% } else { %>
+                  <span class="text-secondary small">Cleared</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-5">
+              <div class="fw-semibold mb-1">No fine records found</div>
+              <div class="text-secondary small">
+                <% if (activeStatus !== 'all') { %>
+                  No fines with status "<%= activeStatus %>". <a href="/circulation/fines?status=all">View all fines</a>.
+                <% } else { %>
+                  No fines have been recorded.
+                <% } %>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <%- include('../components/pagination', { page: curPage, totalPages: totPages, total: totItems, limit: itemLimit, params: { status: activeStatus } }) %>
+
+</div>

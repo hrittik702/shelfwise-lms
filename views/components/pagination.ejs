@@ -1,0 +1,73 @@
+<%
+  const curPage = Number(typeof page !== 'undefined' ? page : 1) || 1;
+  const totPages = Number(typeof totalPages !== 'undefined' ? totalPages : 1) || 1;
+  const totItems = Number(typeof total !== 'undefined' ? total : 0) || 0;
+  const itemLimit = Number(typeof limit !== 'undefined' ? limit : 10) || 10;
+  const qParams = (typeof params === 'object' && params !== null) ? params : {};
+
+  function pageUrl(p) {
+    const sp = new URLSearchParams();
+    for (const [k, v] of Object.entries(qParams)) {
+      if (k !== 'page' && v !== undefined && v !== null && v !== '') {
+        sp.set(k, String(v));
+      }
+    }
+    sp.set('page', String(p));
+    return '?' + sp.toString();
+  }
+
+  // Calculate page numbers with ellipsis
+  const pages = [];
+  for (let i = 1; i <= totPages; i++) {
+    if (i === 1 || i === totPages || Math.abs(i - curPage) <= 2) {
+      pages.push(i);
+    }
+  }
+
+  const startItem = totItems > 0 ? (curPage - 1) * itemLimit + 1 : 0;
+  const endItem = Math.min(totItems, curPage * itemLimit);
+%>
+
+<% if (totPages > 1) { %>
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination pagination-sm justify-content-center mb-2">
+      <!-- Previous -->
+      <li class="page-item <%= curPage <= 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="<%= curPage > 1 ? pageUrl(curPage - 1) : '#' %>" aria-label="Previous Page" <%= curPage <= 1 ? 'tabindex="-1" aria-disabled="true"' : '' %>>
+          &laquo; Prev
+        </a>
+      </li>
+
+      <!-- Page Numbers -->
+      <% let lastPageNum = 0; %>
+      <% pages.forEach((p) => { %>
+        <% if (p - lastPageNum > 1) { %>
+          <li class="page-item disabled" aria-hidden="true"><span class="page-link">&hellip;</span></li>
+        <% } %>
+        <li class="page-item <%= p === curPage ? 'active' : '' %>">
+          <a class="page-link" href="<%= pageUrl(p) %>" <%= p === curPage ? 'aria-current="page"' : '' %>>
+            <%= p %>
+          </a>
+        </li>
+        <% lastPageNum = p; %>
+      <% }) %>
+
+      <!-- Next -->
+      <li class="page-item <%= curPage >= totPages ? 'disabled' : '' %>">
+        <a class="page-link" href="<%= curPage < totPages ? pageUrl(curPage + 1) : '#' %>" aria-label="Next Page" <%= curPage >= totPages ? 'tabindex="-1" aria-disabled="true"' : '' %>>
+          Next &raquo;
+        </a>
+      </li>
+    </ul>
+
+    <% if (totItems > 0) { %>
+      <div class="text-center small text-secondary">
+        Showing <%= startItem %>–<%= endItem %> of <%= totItems %>
+      </div>
+    <% } %>
+  </nav>
+<% } else if (totItems > 0) { %>
+  <div class="text-center small text-secondary mt-3">
+    Showing all <%= totItems %> <%= totItems === 1 ? 'record' : 'records' %>
+  </div>
+<% } %>

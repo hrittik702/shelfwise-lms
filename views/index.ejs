@@ -2,14 +2,14 @@
 
 <div class="shelfwise-hub container py-4 py-lg-5">
   <!-- Dashboard heading -->
-  <section class="hub-hero mb-5">
+  <section class="hub-hero mb-4 mb-lg-5">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
       <div class="d-flex align-items-center gap-3">
         <img src="/assets/logo.png" alt="ShelfWise" width="68" height="68" class="hub-logo" />
 
         <div>
-          <p class="hub-eyebrow mb-2">LIBRARY WORKSPACE</p>
-          <h1 class="h2 fw-bold mb-2">Library Operations</h1>
+          <p class="hub-eyebrow mb-1">LIBRARY WORKSPACE</p>
+          <h1 class="h2 fw-bold mb-1">Library Operations</h1>
           <p class="text-secondary mb-0">
             Manage books, members, circulation, and fines from one place.
           </p>
@@ -18,41 +18,106 @@
 
       <div class="d-flex flex-wrap gap-2">
         <a href="/books" class="btn btn-outline-success">
-          <i class="bi bi-search me-2"></i>
+          <i class="bi bi-search me-2" aria-hidden="true"></i>
           Browse Catalog
         </a>
 
         <a href="/books/new" class="btn btn-success">
-          <i class="bi bi-plus-lg me-2"></i>
+          <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
           Add Book
         </a>
       </div>
     </div>
   </section>
 
-  <!-- Frequently used operations -->
-  <section class="mb-5">
+  <!-- Stat Tiles (All clickable shortcuts to filtered lists) -->
+  <%
+    const hasStats = typeof stats === 'object' && stats !== null;
+    const totalBooks = hasStats && stats.total_books !== undefined ? stats.total_books : '—';
+    const booksOnLoan = hasStats && stats.books_on_loan !== undefined ? stats.books_on_loan : '—';
+    const overdueLoans = hasStats && stats.overdue_loans !== undefined ? stats.overdue_loans : '—';
+    const unpaidFines = hasStats && stats.unpaid_fines_amount !== undefined ? '₹' + stats.unpaid_fines_amount : '—';
+  %>
+  <section class="mb-4 mb-lg-5" aria-label="Library Overview Statistics">
+    <div class="row g-3">
+      <!-- Total Books -->
+      <div class="col-6 col-lg-3">
+        <a href="/books" class="hub-action-card h-100 text-decoration-none">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-secondary small fw-medium">Total Books</span>
+            <div class="hub-action-icon mb-0" style="width:2.25rem;height:2.25rem;font-size:1.1rem;">
+              <i class="bi bi-book" aria-hidden="true"></i>
+            </div>
+          </div>
+          <div class="display-6 fw-bold mb-1 text-dark"><%= totalBooks %></div>
+          <span class="hub-card-link small">View catalog &rarr;</span>
+        </a>
+      </div>
+
+      <!-- Books on Loan -->
+      <div class="col-6 col-lg-3">
+        <a href="/circulation" class="hub-action-card h-100 text-decoration-none">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-secondary small fw-medium">Books on Loan</span>
+            <div class="hub-action-icon mb-0" style="width:2.25rem;height:2.25rem;font-size:1.1rem;">
+              <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+            </div>
+          </div>
+          <div class="display-6 fw-bold mb-1 text-dark"><%= booksOnLoan %></div>
+          <span class="hub-card-link small">View active loans &rarr;</span>
+        </a>
+      </div>
+
+      <!-- Overdue Loans -->
+      <div class="col-6 col-lg-3">
+        <a href="/circulation/overdue" class="hub-action-card h-100 text-decoration-none border-warning-subtle">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-secondary small fw-medium">Overdue Loans</span>
+            <div class="hub-action-icon hub-action-icon-gold mb-0" style="width:2.25rem;height:2.25rem;font-size:1.1rem;">
+              <i class="bi bi-clock-history" aria-hidden="true"></i>
+            </div>
+          </div>
+          <div class="display-6 fw-bold mb-1 <%= Number(overdueLoans) > 0 ? 'text-danger' : 'text-dark' %>"><%= overdueLoans %></div>
+          <span class="hub-card-link text-warning-emphasis small">Review overdue &rarr;</span>
+        </a>
+      </div>
+
+      <!-- Unpaid Fines -->
+      <div class="col-6 col-lg-3">
+        <a href="/circulation/fines" class="hub-action-card h-100 text-decoration-none border-danger-subtle">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-secondary small fw-medium">Unpaid Fines</span>
+            <div class="hub-action-icon mb-0" style="width:2.25rem;height:2.25rem;font-size:1.1rem;background-color:rgba(185,67,67,0.12);color:var(--sw-danger);">
+              <i class="bi bi-cash-stack" aria-hidden="true"></i>
+            </div>
+          </div>
+          <div class="display-6 fw-bold mb-1 text-danger"><%= unpaidFines %></div>
+          <span class="hub-card-link text-danger small">Manage dues &rarr;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions Row -->
+  <section class="mb-4 mb-lg-5" aria-labelledby="quickActionsHeading">
     <div class="hub-section-heading mb-3">
       <div>
-        <h2 class="h5 fw-bold mb-1">Quick Actions</h2>
-        <p class="text-secondary small mb-0">Shortcuts for everyday library operations.</p>
+        <h2 id="quickActionsHeading" class="h5 fw-bold mb-1">Quick Actions</h2>
+        <p class="text-secondary small mb-0">Shortcuts for primary desk operations.</p>
       </div>
     </div>
 
     <div class="row g-3">
       <!-- Issue book -->
       <div class="col-12 col-sm-6 col-xl-3">
-        <a href="/circulation" class="hub-action-card h-100">
+        <a href="/circulation/issue" class="hub-action-card h-100">
           <div class="hub-action-icon">
-            <i class="bi bi-book-half"></i>
+            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
           </div>
-
-          <h3 class="h6 fw-bold mb-2">Issue Details</h3>
-          <p class="small text-secondary mb-3">Manage Current Book Loans.</p>
-
+          <h3 class="h6 fw-bold mb-1">Issue a Book</h3>
+          <p class="small text-secondary mb-3">Register a new loan for an eligible member.</p>
           <span class="hub-card-link">
-            Start issuing
-            <i class="bi bi-arrow-up-right ms-1"></i>
+            Start issuing <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </span>
         </a>
       </div>
@@ -61,158 +126,202 @@
       <div class="col-12 col-sm-6 col-xl-3">
         <a href="/circulation/return" class="hub-action-card h-100">
           <div class="hub-action-icon">
-            <i class="bi bi-arrow-return-left"></i>
+            <i class="bi bi-box-arrow-in-down-left" aria-hidden="true"></i>
           </div>
-
-          <h3 class="h6 fw-bold mb-2">Return a Book</h3>
-          <p class="small text-secondary mb-3">Process a return and calculate any overdue fine.</p>
-
+          <h3 class="h6 fw-bold mb-1">Return a Book</h3>
+          <p class="small text-secondary mb-3">Process returns and calculate overdue fines.</p>
           <span class="hub-card-link">
-            Process return
-            <i class="bi bi-arrow-up-right ms-1"></i>
+            Open return desk <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </span>
         </a>
       </div>
 
-      <!-- Current loans -->
+      <!-- Register Member -->
       <div class="col-12 col-sm-6 col-xl-3">
-        <a href="/issues/current" class="hub-action-card h-100">
+        <a href="/members/new" class="hub-action-card h-100">
           <div class="hub-action-icon">
-            <i class="bi bi-arrow-left-right"></i>
+            <i class="bi bi-person-plus" aria-hidden="true"></i>
           </div>
-
-          <h3 class="h6 fw-bold mb-2">Current Loans</h3>
-          <p class="small text-secondary mb-3">View books that are currently issued to members.</p>
-
+          <h3 class="h6 fw-bold mb-1">Add Member</h3>
+          <p class="small text-secondary mb-3">Register a new student or faculty account.</p>
           <span class="hub-card-link">
-            View issued books
-            <i class="bi bi-arrow-up-right ms-1"></i>
+            Register member <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </span>
         </a>
       </div>
 
-      <!-- Overdue loans -->
+      <!-- Add Book -->
       <div class="col-12 col-sm-6 col-xl-3">
-        <a href="/issues/overdue" class="hub-action-card hub-action-card-alert h-100">
-          <div class="hub-action-icon hub-action-icon-gold">
-            <i class="bi bi-calendar2-week"></i>
+        <a href="/books/new" class="hub-action-card h-100">
+          <div class="hub-action-icon">
+            <i class="bi bi-plus-square" aria-hidden="true"></i>
           </div>
-
-          <h3 class="h6 fw-bold mb-2">Overdue Books</h3>
-          <p class="small text-secondary mb-3">
-            Review late loans and check their overdue duration.
-          </p>
-
+          <h3 class="h6 fw-bold mb-1">Add Book</h3>
+          <p class="small text-secondary mb-3">Add a new book title to the library catalog.</p>
           <span class="hub-card-link">
-            Review overdue loans
-            <i class="bi bi-arrow-up-right ms-1"></i>
+            Add to catalog <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </span>
         </a>
       </div>
     </div>
   </section>
 
-  <!-- Management sections -->
-  <section class="mb-5">
+  <!-- Needs Attention Row (Top overdue loans) -->
+  <%
+    const attentionList = Array.isArray(locals.attention) ? locals.attention : (typeof attention !== 'undefined' && Array.isArray(attention) ? attention : []);
+  %>
+  <section class="mb-4 mb-lg-5" aria-labelledby="needsAttentionHeading">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="card-header bg-white border-bottom p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <h2 id="needsAttentionHeading" class="h6 fw-bold mb-0 text-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            Needs Attention: Most Overdue Loans
+          </h2>
+        </div>
+        <a href="/circulation/overdue" class="btn btn-outline-danger btn-sm">
+          View All Overdue (<%= overdueLoans %>)
+        </a>
+      </div>
+
+      <div class="card-body p-0">
+        <% if (attentionList.length > 0) { %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="ps-3 text-secondary small">Book</th>
+                  <th scope="col" class="text-secondary small">Borrower</th>
+                  <th scope="col" class="text-center text-secondary small">Overdue</th>
+                  <th scope="col" class="text-end pe-3 text-secondary small">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% attentionList.forEach((item) => { %>
+                  <tr>
+                    <td class="ps-3 fw-semibold text-truncate" style="max-width: 280px;">
+                      <%= item.title %>
+                    </td>
+                    <td>
+                      <span class="text-secondary"><%= item.member_name %></span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge rounded-pill text-bg-danger">
+                        <%= item.days_overdue %> days overdue
+                      </span>
+                    </td>
+                    <td class="text-end pe-3">
+                      <a href="/circulation/return?issue_id=<%= item.issue_id %>" class="btn btn-sm btn-outline-success">
+                        Return Book
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="p-4 text-center text-secondary">
+            <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-2" aria-hidden="true"></i>
+            <span class="fw-semibold text-dark">Nothing overdue!</span>
+            <div class="small">All borrowed books are currently on schedule.</div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- Management Navigation Sections (All valid routes) -->
+  <section class="mb-4" aria-labelledby="mgmtHeading">
     <div class="hub-section-heading mb-3">
       <div>
-        <h2 class="h5 fw-bold mb-1">Manage Your Library</h2>
-        <p class="text-secondary small mb-0">
-          Access the catalog, member records, and financial records.
-        </p>
+        <h2 id="mgmtHeading" class="h5 fw-bold mb-1">Manage Your Library</h2>
+        <p class="text-secondary small mb-0">Direct access to inventory, users, and circulation.</p>
       </div>
     </div>
 
     <div class="row g-4">
-      <!-- Catalog management -->
+      <!-- Catalog Management -->
       <div class="col-12 col-lg-4">
         <div class="hub-management-panel h-100">
           <div class="hub-panel-heading">
-            <div class="hub-action-icon">
-              <i class="bi bi-collection"></i>
+            <div class="hub-action-icon mb-0">
+              <i class="bi bi-collection" aria-hidden="true"></i>
             </div>
-
             <div>
-              <h3 class="h6 fw-bold mb-1">Catalog & Inventory</h3>
-              <p class="small text-secondary mb-0">Book records and availability.</p>
+              <h3 class="h6 fw-bold mb-0">Catalog &amp; Inventory</h3>
+              <p class="small text-secondary mb-0">Book records and stock counts.</p>
             </div>
           </div>
 
           <div class="hub-link-list">
             <a href="/books" class="hub-list-link">
-              <span>
-                <i class="bi bi-book me-2"></i>
-                View and Search Books
-              </span>
-              <i class="bi bi-chevron-right"></i>
+              <span><i class="bi bi-search me-2" aria-hidden="true"></i>Browse &amp; Search Books</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </a>
-
             <a href="/books/new" class="hub-list-link">
-              <span>
-                <i class="bi bi-plus-circle me-2"></i>
-                Add New Book
-              </span>
-              <i class="bi bi-chevron-right"></i>
+              <span><i class="bi bi-plus-circle me-2" aria-hidden="true"></i>Add New Book</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </a>
           </div>
         </div>
       </div>
 
-      <!-- Member management -->
+      <!-- Member Management -->
       <div class="col-12 col-lg-4">
         <div class="hub-management-panel h-100">
           <div class="hub-panel-heading">
-            <div class="hub-action-icon">
-              <i class="bi bi-people"></i>
+            <div class="hub-action-icon mb-0">
+              <i class="bi bi-people" aria-hidden="true"></i>
             </div>
-
             <div>
-              <h3 class="h6 fw-bold mb-1">Member Management</h3>
+              <h3 class="h6 fw-bold mb-0">Member Directory</h3>
               <p class="small text-secondary mb-0">Student and faculty records.</p>
             </div>
           </div>
 
           <div class="hub-link-list">
             <a href="/members" class="hub-list-link">
-              <span>
-                <i class="bi bi-person-lines-fill me-2"></i>
-                View Members
-              </span>
-              <i class="bi bi-chevron-right"></i>
+              <span><i class="bi bi-person-lines-fill me-2" aria-hidden="true"></i>View All Members</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </a>
-
             <a href="/members/new" class="hub-list-link">
-              <span>
-                <i class="bi bi-person-plus me-2"></i>
-                Register Member
-              </span>
-              <i class="bi bi-chevron-right"></i>
+              <span><i class="bi bi-person-plus me-2" aria-hidden="true"></i>Register New Member</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </a>
           </div>
         </div>
       </div>
 
-      <!-- Fine management -->
+      <!-- Circulation & Finance -->
       <div class="col-12 col-lg-4">
         <div class="hub-management-panel h-100">
           <div class="hub-panel-heading">
-            <div class="hub-action-icon hub-action-icon-gold">
-              <i class="bi bi-wallet2"></i>
+            <div class="hub-action-icon hub-action-icon-gold mb-0">
+              <i class="bi bi-wallet2" aria-hidden="true"></i>
             </div>
-
             <div>
-              <h3 class="h6 fw-bold mb-1">Fine Management</h3>
-              <p class="small text-secondary mb-0">Overdue charges and payment status.</p>
+              <h3 class="h6 fw-bold mb-0">Circulation &amp; Fines</h3>
+              <p class="small text-secondary mb-0">Lending desk, overdue logs, and fees.</p>
             </div>
           </div>
 
           <div class="hub-link-list">
-            <a href="/fines" class="hub-list-link">
-              <span>
-                <i class="bi bi-receipt me-2"></i>
-                View Fine Records
-              </span>
-              <i class="bi bi-chevron-right"></i>
+            <a href="/circulation" class="hub-list-link">
+              <span><i class="bi bi-arrow-left-right me-2" aria-hidden="true"></i>Current Loans</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </a>
+            <a href="/circulation/return" class="hub-list-link">
+              <span><i class="bi bi-box-arrow-in-down-left me-2" aria-hidden="true"></i>Return Desk</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </a>
+            <a href="/circulation/overdue" class="hub-list-link">
+              <span><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Overdue Tracking</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </a>
+            <a href="/circulation/fines" class="hub-list-link">
+              <span><i class="bi bi-receipt me-2" aria-hidden="true"></i>Fine Records</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </a>
           </div>
         </div>
