@@ -657,3 +657,17 @@ footer.footer {
 .btn-sw-outline:focus-visible {
   box-shadow: 0 0 0 0.2rem var(--sw-focus-ring, rgba(6, 59, 47, 0.22));
 }
+
+/* Subtle table links: inherit text color, no underline, grey underline on hover */
+.link-subtle {
+  color: inherit;
+  text-decoration: none;
+}
+.link-subtle:hover,
+.link-subtle:focus-visible {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: #9aa39d; /* grey */
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}

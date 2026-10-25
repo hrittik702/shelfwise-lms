@@ -23,19 +23,33 @@ FROM issue as i
     join members as m on i.member_id = m.member_id
     join staff as s on i.staff_id = s.staff_id;
 -- view for member details
-CREATE OR REPLACE VIEW member_details AS
-SELECT m.* (
-        SELECT COUNT(*)
-        FROM issue i
-        WHERE i.member_id = m.member_id
-            AND i.return_date IS NULL
-    ) AS active_loans,
-    (
-        SELECT COUNT(*)
-        FROM issue I
-        WHERE issue i
-        WHERE i.member_id = m.member_id
-    ) AS total_issues,
-    (
-        SELECT COALESCE(SUM(f.amount), 0) FROM fine f JOIN issue i on f.issue_id = 
-    )
+create or replace VIEW member_details as
+SELECT m.member_id,
+    m.name,
+    m.member_type,
+    m.status,
+    COUNT(i.issue_id) AS active_loans
+FROM members m
+    LEFT JOIN issue i ON i.member_id = m.member_id
+    AND i.return_date IS NULL
+GROUP BY m.member_id,
+    m.name,
+    m.member_type
+ORDER BY active_loans DESC;
+-- view for issue details
+CREATE OR REPLACE VIEW issue_details AS
+SELECT i.issue_id,
+    i.book_id,
+    i.member_id,
+    b.title AS book_title,
+    m.name AS member_name,
+    m.member_type,
+    s.name AS staff_name,
+    i.issue_date,
+    i.due_date,
+    i.return_date,
+    DATEDIFF(CURDATE(), due_date) AS days_overdue
+FROM issue i
+    JOIN books b ON b.book_id = i.book_id
+    JOIN members m ON m.member_id = i.member_id
+    JOIN staff s ON s.staff_id = i.staff_id;

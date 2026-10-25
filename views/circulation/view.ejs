@@ -1,0 +1,118 @@
+<% layout('/layout/boilerplate') %>
+<div class="container py-4 py-lg-5">
+
+  <%
+    const fmt = (d) => d
+      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    const FINE_PER_DAY = 2;
+    const overdueCount = issues.filter((i) => Number(i.days_overdue) > 0).length;
+    const dueTodayCount = issues.filter((i) => Number(i.days_overdue) === 0).length;
+  %>
+
+  <!-- Page heading -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Circulation</h1>
+      <p class="text-secondary mb-0">Books currently issued to members.</p>
+    </div>
+    <a href="/circulation/issue" class="btn btn-success px-4">
+      <span aria-hidden="true">+</span> New Transaction
+    </a>
+  </div>
+
+  <!-- Summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+        <div class="text-secondary small">Currently Issued</div>
+        <div class="fs-3 fw-bold"><%= issues.length %></div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+        <div class="text-secondary small">Overdue</div>
+        <div class="fs-3 fw-bold <%= overdueCount > 0 ? 'text-danger' : '' %>"><%= overdueCount %></div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+        <div class="text-secondary small">Due Today</div>
+        <div class="fs-3 fw-bold <%= dueTodayCount > 0 ? 'text-warning-emphasis' : '' %>"><%= dueTodayCount %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Responsive table -->
+  <div class="table-responsive border rounded-3 shadow-sm">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="ps-3 text-secondary small text-center">S.No.</th>
+          <th scope="col">Book</th>
+          <th scope="col">Member</th>
+          <th scope="col" class="text-center">Issued</th>
+          <th scope="col" class="text-center">Due</th>
+          <th scope="col" class="text-center">Status</th>
+          <th scope="col" class="text-end">Est. Fine</th>
+          <th scope="col" class="pe-3">Issued By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (issues.length > 0) { %>
+          <% issues.forEach((issue, index) => {
+            const days = Number(issue.days_overdue);
+            const fine = days > 0 ? days * FINE_PER_DAY : 0;
+          %>
+            <tr>
+              <td class="ps-3 text-center text-secondary small"><%= index + 1 %></td>
+
+              <td class="fw-semibold">
+  <a href="/books/<%= issue.book_id %>" class="link-subtle"><%= issue.book_title %></a>
+</td>
+
+<td>
+  <a href="/members/<%= issue.member_id %>" class="link-subtle"><%= issue.member_name %></a>
+  <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
+    <%= issue.member_type %>
+  </span>
+</td>
+
+              <td class="text-center small text-nowrap"><%= fmt(issue.issue_date) %></td>
+              <td class="text-center small text-nowrap"><%= fmt(issue.due_date) %></td>
+
+              <td class="text-center">
+                <% if (days > 0) { %>
+                  <span class="badge rounded-pill text-bg-danger"><%= days %> day<%= days === 1 ? '' : 's' %> overdue</span>
+                <% } else if (days === 0) { %>
+                  <span class="badge rounded-pill text-bg-warning">Due today</span>
+                <% } else { %>
+                  <span class="badge rounded-pill text-bg-success"><%= Math.abs(days) %> day<%= days === -1 ? '' : 's' %> left</span>
+                <% } %>
+              </td>
+
+              <td class="text-end text-nowrap <%= fine > 0 ? 'text-danger fw-semibold' : 'text-secondary' %>">
+                <%= fine > 0 ? '₹' + fine : '—' %>
+              </td>
+
+              <td class="pe-3 small text-secondary"><%= issue.staff_name %></td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-5">
+              <div class="fw-semibold mb-1">No books are currently issued</div>
+              <div class="text-secondary small">
+                Start with <a href="/circulation/issue">a new transaction</a>.
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="small text-secondary mt-3">
+    Estimated fine is calculated up to today at ₹2 per day. The final fine is recorded when the book is returned.
+  </div>
+</div>

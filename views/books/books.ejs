@@ -88,16 +88,53 @@
       </tbody>
     </table>
   </div>
+<% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+  <%
+    const current = Number(page) || 1;
 
-  <!-- Stock legend -->
-  <div class="d-flex flex-wrap gap-3 mt-3 small text-secondary">
-    <span>
-      <span class="badge rounded-pill text-bg-success">2 / 5</span>
-      Available / total copies
-    </span>
-    <span>
-      <span class="badge rounded-pill text-bg-danger">0 / 5</span>
-      All copies issued
-    </span>
-  </div>
+    // optional: keep search/filter values in every link (only if your route passes them)
+    const params = new URLSearchParams();
+    if (locals.q) params.set('q', q);
+    if (locals.type) params.set('type', type);
+    if (locals.status) params.set('status', status);
+    const extra = params.toString() ? '&' + params.toString() : '';
+
+    // show current page +/- 2, plus first and last
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - current) <= 2) pages.push(i);
+    }
+  %>
+
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination pagination-sm justify-content-center mb-2">
+
+      <!-- Previous -->
+      <li class="page-item <%= current <= 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="?page=<%= current - 1 %><%= extra %>">&laquo; Prev</a>
+      </li>
+
+      <!-- Page numbers -->
+      <% let last = 0; %>
+      <% pages.forEach((p) => { %>
+        <% if (p - last > 1) { %>
+          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        <% } %>
+        <li class="page-item <%= p === current ? 'active' : '' %>">
+          <a class="page-link" href="?page=<%= p %><%= extra %>"
+             <%= p === current ? 'aria-current="page"' : '' %>><%= p %></a>
+        </li>
+        <% last = p; %>
+      <% }) %>
+
+      <!-- Next -->
+      <li class="page-item <%= current >= totalPages ? 'disabled' : '' %>">
+        <a class="page-link" href="?page=<%= current + 1 %><%= extra %>">Next &raquo;</a>
+      </li>
+    </ul>
+    <div class="text-center small text-secondary">
+      Page <%= current %> of <%= totalPages %>
+    </div>
+  </nav>
+<% } %>
 </div>
