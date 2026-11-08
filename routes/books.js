@@ -80,15 +80,43 @@ router.get(
 );
 
 // -[ ] : Error -> Delete must be method override or POST
-router.get(
-  '/:book_id/delete',
-  wrapAsync(async (req, res) => {
+// router.get(
+//   '/:book_id/delete',
+//   wrapAsync(async (req, res) => {
+//     const book_id = req.params.book_id;
+//     const sql = `delete from books where book_id = ?`;
+//     await db.query(sql, [book_id]);
+//     res.redirect('/books');
+//   })
+// );
+
+router.post('/:book_id/delete', async (req, res, next) => {
+  try {
     const book_id = req.params.book_id;
+    // active loan check handler
+    const [rows] = await db.query(
+      'select count(i.book_id) as active_loans from issue i where book_id = ?',
+      [book_id]
+    );
+    if (rows[0].active_loans > 0) {
+      req.flash('warning', `Book Cannot be deleted, It has ${rows[0].active_loans} active loan`);
+      req.session.save((err) => {
+        if (err) {
+          next(err);
+        }
+        return res.redirect(`/books/${book_id}`);
+      });
+      return;
+    }
+    // deletion
     const sql = `delete from books where book_id = ?`;
     await db.query(sql, [book_id]);
     res.redirect('/books');
-  })
-);
+  } catch (err) {
+    req.flash('error', `${err.code}`);
+    res.redirect('/books');
+  }
+});
 
 // Book Update
 router.post(
