@@ -31,6 +31,8 @@
       <form
         action="/books/<%= book.book_id %>/update"
         method="POST"
+        id="update_form"
+        data-confirm="Update Book Information"
       >
 
         <!-- ISBN -->
@@ -214,7 +216,6 @@
           >
             Cancel
           </a>
-
           <button type="submit" class="btn btn-success px-4">
             Update Book
           </button>
@@ -228,3 +229,34 @@
   </div>
 
 </div>
+<!-- FORCE CENTERING WITH FIXED POSITION AND MARGIN: AUTO
+<dialog id="d" class="p-4 rounded-4 border-0 shadow" 
+        style="position: fixed; inset: 0; margin: auto; max-width: 400px; width: 100%; height: fit-content;">
+  <h3 class="h5 fw-bold mb-3">Confirm Update</h3>
+  <p class="text-secondary small mb-4">Are you sure you want to update these book details?</p>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" id="cancel" class="btn btn-light btn-sm" value="close">Cancel</button>
+    <button type="button" id="confirm" class="btn btn-success btn-sm" value="confirm">Confirm</button>
+  </div>
+</dialog>
+
+<script>
+  const form = document.getElementById('update_form');
+  const d = document.getElementById('d');
+  form.addEventListener('submit', (e)=> {
+    e.preventDefault();
+    d.showModal();
+    console.log('Model Opens');
+  })
+
+  document.getElementById('cancel').addEventListener('click', ()=> {
+    d.close();
+    console.log('Close Dialog');
+  })
+
+  document.getElementById('confirm').addEventListener('click',()=>{
+    form.dataset.confirmed = '1';
+    console.log(form.dataset.confirmed);
+    form.submit()
+  })
+</script> -->
