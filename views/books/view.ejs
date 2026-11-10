@@ -1,7 +1,6 @@
 <% layout('/layout/boilerplate') %>
 
 <div class="container py-4 py-lg-5">
-
   <!-- Page actions -->
   <div class="mb-4">
     <a href="/books" class="btn btn-outline-success btn-sm">
@@ -12,20 +11,17 @@
 
   <!-- Book details card -->
   <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-
     <!-- Card header -->
     <div class="card-header bg-white border-bottom p-4">
-      <div class="d-flex flex-wrap justify-content-between
-                  align-items-start gap-3">
-
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-start gap-3"
+      >
         <div>
           <span class="badge rounded-pill text-bg-light border mb-2">
             <%= book.category_name %>
           </span>
 
-          <h1 class="h3 fw-bold mb-2">
-            <%= book.title %>
-          </h1>
+          <h1 class="h3 fw-bold mb-2"><%= book.title %></h1>
 
           <p class="text-secondary mb-0">
             Written by <strong><%= book.author %></strong>
@@ -35,26 +31,23 @@
         <!-- Availability status -->
         <div>
           <% if (Number(book.available_copies) > 0) { %>
-            <span class="badge rounded-pill text-bg-success px-3 py-2">
-              Available
-            </span>
+          <span class="badge rounded-pill text-bg-success px-3 py-2">
+            Available
+          </span>
           <% } else { %>
-            <span class="badge rounded-pill text-bg-danger px-3 py-2">
-              Unavailable
-            </span>
+          <span class="badge rounded-pill text-bg-danger px-3 py-2">
+            Unavailable
+          </span>
           <% } %>
         </div>
-
       </div>
     </div>
 
     <!-- Card body -->
     <div class="card-body p-4">
-
       <h2 class="h6 fw-bold mb-4">Book Information</h2>
 
       <div class="row g-4">
-
         <div class="col-12 col-md-6">
           <div class="text-secondary small mb-1">Book ID</div>
           <div class="fw-semibold"><%= book.book_id %></div>
@@ -62,9 +55,7 @@
 
         <div class="col-12 col-md-6">
           <div class="text-secondary small mb-1">ISBN</div>
-          <div class="font-monospace">
-            <%= book.isbn %>
-          </div>
+          <div class="font-monospace"><%= book.isbn %></div>
         </div>
 
         <div class="col-12 col-md-6">
@@ -88,15 +79,14 @@
           <div class="text-secondary small mb-1">Category</div>
           <div class="fw-semibold"><%= book.category_name %></div>
         </div>
-
       </div>
 
-      <hr class="my-4">
+      <hr class="my-4" />
 
       <!-- Available copies and update action -->
-      <div class="d-flex flex-wrap justify-content-between
-                  align-items-center gap-3">
-
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center gap-3"
+      >
         <div>
           <h2 class="h6 fw-bold mb-1">Available Copies</h2>
           <p class="text-secondary small mb-0">
@@ -105,7 +95,6 @@
         </div>
 
         <div class="d-flex align-items-center gap-3">
-
           <div class="d-flex align-items-baseline gap-2">
             <span class="display-6 fw-bold text-success">
               <%= book.available_copies %>
@@ -116,9 +105,8 @@
           <!-- Update book icon button -->
           <a
             href="/books/<%= book.book_id %>/update"
-            class="btn btn-outline-success rounded-3 d-inline-flex
-                   align-items-center justify-content-center"
-            style="width: 42px; height: 42px;"
+            class="btn btn-outline-success rounded-3 d-inline-flex align-items-center justify-content-center"
+            style="width: 42px; height: 42px"
             aria-label="Update book information"
             title="Update Book"
           >
@@ -134,14 +122,25 @@
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />
             </svg>
           </a>
-          <form action="/books/<%= book.book_id %>/delete" method="POST" data-confirm="Are you sure? you want to delete!">
-            <button type="submit" class="btn btn-outline-danger rounded-3 d-inline-flex
-                   align-items-center justify-content-center" aria-label="Delete Book"
-            title="delete book">Delete</button>
+          <form
+            action="/books/<%= book.book_id %>/delete"
+            method="POST"
+            data-confirm="Are you sure? you want to delete!"
+            data-btn="Delete"
+            data-title="Confirm"
+          >
+            <button
+              type="submit"
+              class="btn btn-outline-danger rounded-3 d-inline-flex align-items-center justify-content-center"
+              aria-label="Delete Book"
+              title="delete book"
+            >
+              Delete
+            </button>
           </form>
           <!-- <a
             href="/books/<%= book.book_id %>/delete"

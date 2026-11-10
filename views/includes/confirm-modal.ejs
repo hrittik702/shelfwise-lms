@@ -1,0 +1,54 @@
+<dialog
+  id="d"
+  class="p-4 rounded-4 border-0 shadow"
+  style="
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    max-width: 400px;
+    width: 100%;
+    height: fit-content;
+  "
+>
+  <h3 class="h5 fw-bold mb-3" id="form-title"></h3>
+  <p class="text-secondary small mb-4" id="form-message"></p>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" id="cancel" class="btn btn-light btn-sm">
+      Cancel
+    </button>
+    <button type="button" id="confirm" class="btn btn-success btn-sm"></button>
+  </div>
+</dialog>
+
+<script>
+  const d = document.getElementById('d');
+  let msg = document.getElementById('form-message');
+  let title = document.getElementById('form-title');
+  let btnConfirm = document.getElementById('confirm');
+
+  let pendingForm = null; //remembering which form have to pause
+
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (!form.dataset.confirm) return;
+    e.preventDefault();
+    msg.innerText = form.dataset.confirm;
+    btnConfirm.innerText = form.dataset.btn;
+    title.innerText = form.dataset.title;
+    console.log(msg, btnConfirm, title, form.dataset.btnMsg);
+    pendingForm = form;
+    d.showModal();
+  });
+
+  document.getElementById('cancel').addEventListener('click', () => {
+    pendingForm = null;
+    d.close();
+  });
+
+  document.getElementById('confirm').addEventListener('click', () => {
+    if (!pendingForm) return;
+    // pendingForm.submit();
+    HTMLFormElement.prototype.submit.call(pendingForm);
+    d.close();
+  });
+</script>
