@@ -28,6 +28,7 @@ SELECT m.member_id,
     m.name,
     m.member_type,
     m.status,
+    m.email,
     COUNT(i.issue_id) AS active_loans
 FROM members m
     LEFT JOIN issue i ON i.member_id = m.member_id
@@ -53,3 +54,10 @@ FROM issue i
     JOIN books b ON b.book_id = i.book_id
     JOIN members m ON m.member_id = i.member_id
     JOIN staff s ON s.staff_id = i.staff_id;
+select count(i.book_id)
+from issue i
+where book_id = 4;
+select *
+from issue;
+
+SELECT * FROM sessions;

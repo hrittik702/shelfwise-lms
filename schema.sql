@@ -10,7 +10,7 @@ CREATE TABLE category(
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     category_name varchar(20) UNIQUE
 );
--- Books table 
+-- Books table
 CREATE TABLE books (
     book_id INT AUTO_INCREMENT PRIMARY KEY,
     isbn CHAR(13) NOT NULL UNIQUE,
@@ -60,3 +60,10 @@ CREATE TABLE fine(
     paid_date date,
     CONSTRAINT fk_issue_id FOREIGN KEY (issue_id) REFERENCES issue(issue_id)
 );
+ALTER TABLE books DROP CONSTRAINT fk_books_category;
+ALTER TABLE books
+ADD CONSTRAINT fk_books_cat FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE;
+-- issue.book_id is a foreign key to books.book_id.MySQL enforces this rule: an issue row must always point at a book that exists.
+-- When you delete a book that still has issue rows,
+-- those rows would point at nothing.MySQL refuses,
+-- and your route sees the error.
