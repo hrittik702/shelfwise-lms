@@ -13,7 +13,16 @@
           </div>
 
           <!-- Signup Form -->
-          <form action="/staff/signup" method="POST" class="needs-validation" novalidate>
+          <form
+            action="/staff/signup"
+            method="POST"
+            class="needs-validation"
+            novalidate
+            data-confirm="Are you sure you want to register this new staff account? Please verify all credentials before confirming."
+            data-btn="Create Account"
+            data-title="Register Staff Account"
+            data-variant="danger"
+          >
             <!-- Full Name Input -->
             <div class="mb-3">
               <label for="name" class="auth-form-label">Full Name</label>

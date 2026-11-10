@@ -1,54 +1,170 @@
 <dialog
   id="d"
-  class="p-4 rounded-4 border-0 shadow"
-  style="
-    position: fixed;
-    inset: 0;
-    margin: auto;
-    max-width: 400px;
-    width: 100%;
-    height: fit-content;
-  "
+  class="confirm-modal rounded-4 border-0 shadow-lg p-0"
+  aria-labelledby="form-title"
+  aria-describedby="form-message"
 >
-  <h3 class="h5 fw-bold mb-3" id="form-title"></h3>
-  <p class="text-secondary small mb-4" id="form-message"></p>
-  <div class="d-flex justify-content-end gap-2">
-    <button type="button" id="cancel" class="btn btn-light btn-sm">
-      Cancel
-    </button>
-    <button type="button" id="confirm" class="btn btn-success btn-sm"></button>
+  <div class="p-4">
+    <div class="d-flex align-items-start gap-3 mb-3">
+      <div
+        id="confirm-icon-badge"
+        class="confirm-icon-box rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+      >
+        <i id="confirm-icon" class="bi bi-shield-check fs-5"></i>
+      </div>
+      <div class="flex-grow-1 min-w-0">
+        <h3 class="h5 fw-bold mb-1 text-dark" id="form-title">
+          Please Confirm
+        </h3>
+      </div>
+    </div>
+    <p class="text-secondary small mb-0 lh-base" id="form-message">
+      Are you sure you want to proceed?
+    </p>
+    <div
+      class="d-flex flex-column-reverse flex-sm-row justify-content-sm-end gap-2 pt-2"
+    >
+      <button
+        type="button"
+        id="cancel"
+        class="btn btn-light border px-3 py-2 fw-semibold text-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        id="confirm"
+        class="btn px-4 py-2 fw-semibold text-white"
+      >
+        Confirm
+      </button>
+    </div>
   </div>
 </dialog>
 
 <script>
-  const d = document.getElementById('d');
-  let msg = document.getElementById('form-message');
-  let title = document.getElementById('form-title');
-  let btnConfirm = document.getElementById('confirm');
+  (function () {
+    const d = document.getElementById('d');
+    if (!d) return;
 
-  let pendingForm = null; //remembering which form have to pause
+    const msg = document.getElementById('form-message');
+    const title = document.getElementById('form-title');
+    const btnConfirm = document.getElementById('confirm');
+    const btnCancel = document.getElementById('cancel');
+    const icon = document.getElementById('confirm-icon');
 
-  document.addEventListener('submit', (e) => {
-    const form = e.target;
-    if (!form.dataset.confirm) return;
-    e.preventDefault();
-    msg.innerText = form.dataset.confirm;
-    btnConfirm.innerText = form.dataset.btn;
-    title.innerText = form.dataset.title;
-    console.log(msg, btnConfirm, title, form.dataset.btnMsg);
-    pendingForm = form;
-    d.showModal();
-  });
+    let pendingForm = null;
 
-  document.getElementById('cancel').addEventListener('click', () => {
-    pendingForm = null;
-    d.close();
-  });
+    function resetModal() {
+      pendingForm = null;
+      if (d.open) d.close();
+    }
 
-  document.getElementById('confirm').addEventListener('click', () => {
-    if (!pendingForm) return;
-    // pendingForm.submit();
-    HTMLFormElement.prototype.submit.call(pendingForm);
-    d.close();
-  });
+    document.addEventListener('submit', (e) => {
+      const form = e.target;
+      if (!form || !form.dataset.confirm) return;
+
+      // Ensure form passes HTML5 / Bootstrap validity before confirming
+      if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+        form.classList.add('was-validated');
+        if (typeof form.reportValidity === 'function') {
+          form.reportValidity();
+        }
+        return;
+      }
+
+      e.preventDefault();
+
+      const rawMsg =
+        form.dataset.confirm ||
+        form.dataset.confirmMessage ||
+        'Are you sure you want to proceed?';
+      const rawTitle =
+        form.dataset.title || form.dataset.confirmTitle || 'Please Confirm';
+      const rawBtn =
+        form.dataset.btn || form.dataset.confirmButton || 'Confirm';
+      const rawCancel = form.dataset.cancelBtn || 'Cancel';
+
+      // Detect variant: check explicit data-variant, else infer based on action and button text
+      let variant = (
+        form.dataset.variant ||
+        form.dataset.confirmVariant ||
+        ''
+      ).toLowerCase();
+      if (!variant) {
+        const action = (form.getAttribute('action') || '').toLowerCase();
+        const text = (rawBtn + ' ' + rawTitle).toLowerCase();
+        if (
+          action.includes('delete') ||
+          action.includes('signup') ||
+          action.includes('logout') ||
+          text.includes('delete') ||
+          text.includes('sign up')
+        ) {
+          variant = 'danger';
+        } else {
+          variant = 'success';
+        }
+      }
+
+      msg.textContent = rawMsg;
+      title.textContent = rawTitle;
+      btnConfirm.textContent = rawBtn;
+      if (btnCancel) btnCancel.textContent = rawCancel;
+
+      d.classList.remove('confirm-variant-danger', 'confirm-variant-success');
+      if (variant === 'danger') {
+        d.classList.add('confirm-variant-danger');
+        if (icon) icon.className = 'bi bi-exclamation-triangle-fill fs-5';
+      } else {
+        d.classList.add('confirm-variant-success');
+        if (icon) icon.className = 'bi bi-check-circle-fill fs-5';
+      }
+
+      pendingForm = form;
+      d.showModal();
+
+      // Dynamic focus management:
+      // Focus cancel for destructive / danger actions to prevent accidental submit on Enter
+      // Focus confirm for positive / success actions
+      if (variant === 'danger' && btnCancel) {
+        btnCancel.focus();
+      } else if (btnConfirm) {
+        btnConfirm.focus();
+      }
+    });
+
+    if (btnCancel) {
+      btnCancel.addEventListener('click', resetModal);
+    }
+
+    if (btnConfirm) {
+      btnConfirm.addEventListener('click', () => {
+        if (!pendingForm) return;
+        const formToSubmit = pendingForm;
+        pendingForm = null;
+        d.close();
+        HTMLFormElement.prototype.submit.call(formToSubmit);
+      });
+    }
+
+    // Dynamic dismiss on backdrop click
+    d.addEventListener('click', (e) => {
+      const rect = d.getBoundingClientRect();
+      const isInDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
+      if (!isInDialog) {
+        resetModal();
+      }
+    });
+
+    // Native cancel and close handling
+    d.addEventListener('cancel', resetModal);
+    d.addEventListener('close', () => {
+      pendingForm = null;
+    });
+  })();
 </script>

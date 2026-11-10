@@ -143,9 +143,10 @@
         <form
           action="/members/<%= member.member_id %>/delete"
           method="POST"
-          data-confirm="Are you sure, You want to delete Member !"
-          data-btn="Delete"
-          data-title="Confirm"
+          data-confirm="Are you sure you want to delete <%= member.name %>? This will permanently remove their member record."
+          data-btn="Delete Member"
+          data-title="Delete Member"
+          data-variant="danger"
         >
           <button type="submit" class="btn btn-outline-danger px-4">
             Delete Member

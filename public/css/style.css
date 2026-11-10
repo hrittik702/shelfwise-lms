@@ -44,8 +44,8 @@
   --transition-base: 0.25s ease-in-out;
 
   --font-main:
-    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
 
   /* Backward Compatibility Aliases */
   --brand-primary: var(--sw-emerald);
@@ -673,8 +673,101 @@ footer.footer {
 }
 
 dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(1px); /* Modern blur effect */
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ==========================================================================
+   Confirmation Dialog Modal (Responsive, Dynamic & Variants)
+   ========================================================================== */
+dialog#d.confirm-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(92vw, 440px);
+  max-width: 440px;
+  height: fit-content;
+  background: var(--sw-surface, #ffffff);
+  border: 1px solid var(--sw-border, #e3e7df) !important;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.12),
+    0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+@keyframes confirmModalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+dialog#d.confirm-modal[open] {
+  animation: confirmModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.confirm-icon-box {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+
+#form-message{
+    padding-bottom: 1rem;
+}
+
+/* Danger Variant: Signup, Delete, Destructive actions */
+.confirm-variant-danger .confirm-icon-box {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.confirm-variant-danger #confirm {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.confirm-variant-danger #confirm:hover,
+.confirm-variant-danger #confirm:focus {
+  background-color: #b91c1c !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25);
+}
+
+
+/* Success / Green-themed Variant: Login, Update, Positive actions */
+.confirm-variant-success .confirm-icon-box {
+  background-color: #d1fae5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.confirm-variant-success #confirm {
+  background-color: #0f766e !important;
+  border-color: #0f766e !important;
+  color: #ffffff !important;
+}
+
+.confirm-variant-success #confirm:hover,
+.confirm-variant-success #confirm:focus {
+  background-color: #0d655e !important;
+  border-color: #0d655e !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.25);
+}
+
+#cancel:hover,
+#cancel:focus {
+  background-color: #f1f5f9;
+  color: #1e293b;
 }
 
 .flex-grow-1 {

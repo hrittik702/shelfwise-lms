@@ -30,9 +30,10 @@
       <form
         action="/members/<%= member.member_id %>/update"
         method="POST"
-        data-confirm="Are you sure, You want to Update the member information!"
-        data-btn="Update"
-        data-title="Confirm"
+        data-confirm="Are you sure you want to save the updated information for <%= member.name %>?"
+        data-btn="Save Changes"
+        data-title="Update Member Profile"
+        data-variant="success"
       >
         <!-- Name -->
         <div class="mb-4">

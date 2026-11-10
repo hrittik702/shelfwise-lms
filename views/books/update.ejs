@@ -32,9 +32,10 @@
         action="/books/<%= book.book_id %>/update"
         method="POST"
         id="update_form"
-        data-confirm="Update Book Information"
-        data-btn="Update"
-        data-title="Confirm"
+        data-confirm="Are you sure you want to save changes to '<%= book.title %>'?"
+        data-btn="Save Changes"
+        data-title="Update Book Details"
+        data-variant="success"
       >
 
         <!-- ISBN -->
