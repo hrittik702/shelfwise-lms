@@ -31,7 +31,8 @@
     "router": "^2.2.0"
   },
   "devDependencies": {
-    "nodemon": "^1.14.10"
+    "nodemon": "^1.14.10",
+    "prettier-plugin-ejs": "^1.0.3"
   },
   "overrides": {
     "nodemon": {

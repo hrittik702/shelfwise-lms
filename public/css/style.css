@@ -671,3 +671,13 @@ footer.footer {
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(1px); /* Modern blur effect */
+}
+
+.flex-grow-1 {
+  display: flex;
+  justify-content: space-between;
+}
