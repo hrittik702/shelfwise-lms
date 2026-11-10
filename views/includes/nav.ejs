@@ -36,33 +36,76 @@
           <a class="nav-link px-3" href="/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link px-3" href="/staff/signup">Staff Sign Up</a>
+          <a class="nav-link px-3" href="/books">Books</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/members">Members</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/circulation">Issues</a>
         </li>
       </ul>
 
-      <!-- Right-aligned Login Action -->
+      <!-- Right-aligned Staff Menu -->
       <div class="navbar-nav-action text-center text-lg-end my-2 my-lg-0">
-        <form
-          action="/staff/logout"
-          method="get"
-          data-confirm="Are you sure you want to sign out of your staff session?"
-          data-btn="Sign Out"
-          data-title="Sign Out"
-          data-variant="danger"
-        >
+        <div class="dropdown d-inline-block">
           <button
-            type="submit"
-            class="btn btn-brand px-4 py-2 fw-semibold rounded-pill"
+            class="btn btn-brand px-3 py-2 fw-semibold rounded-pill dropdown-toggle d-inline-flex align-items-center gap-2"
+            type="button"
+            id="staffDropdownMenu"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
           >
-            Log Out
+            <i class="bi bi-person-circle fs-6"></i>
+            <span><%= currUser.name %></span>
           </button>
-        </form>
-        <!--<a
-          href="/staff/logout"
-          class="btn btn-brand px-4 py-2 fw-semibold rounded-pill text-decoration-none"
-        >
-          Log Out
-        </a>-->
+
+          <ul
+            class="dropdown-menu dropdown-menu-end shadow-sm border p-2 mt-2"
+            aria-labelledby="staffDropdownMenu"
+          >
+            <!-- Staff Information Header -->
+            <li class="px-3 py-2 text-start">
+              <div class="fw-bold text-dark"><%= currUser.name %></div>
+              <div class="small text-secondary">
+                <%= currUser.username ? '@' + currUser.username : (currUser.id ? 'Staff ID: #' + currUser.id : 'Library Staff') %>
+              </div>
+            </li>
+            <li><hr class="dropdown-divider my-1" /></li>
+
+            <!-- Option 1: Add new account -->
+            <li>
+              <a
+                class="dropdown-item d-flex align-items-center gap-2 py-2 rounded-2"
+                href="/staff/signup"
+              >
+                <i class="bi bi-person-plus text-secondary"></i>
+                <span>Add new account</span>
+              </a>
+            </li>
+
+            <!-- Option 2: Log Out -->
+            <li>
+              <form
+                action="/staff/logout"
+                method="get"
+                data-confirm="Are you sure you want to sign out of your staff session?"
+                data-btn="Sign Out"
+                data-title="Sign Out"
+                data-variant="danger"
+                class="m-0"
+              >
+                <button
+                  type="submit"
+                  class="dropdown-item d-flex align-items-center gap-2 py-2 rounded-2 text-danger"
+                >
+                  <i class="bi bi-box-arrow-right text-danger"></i>
+                  <span>Log Out</span>
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
     <% } else {%>

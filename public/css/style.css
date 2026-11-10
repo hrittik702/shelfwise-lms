@@ -73,6 +73,7 @@
 
 html {
   scroll-behavior: smooth;
+  height: 100%;
 }
 
 body {
@@ -80,6 +81,7 @@ body {
   color: var(--sw-text);
   background-color: var(--sw-background);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
@@ -177,6 +179,41 @@ body {
 }
 
 /* =============================
+      NAVBAR DROPDOWN THEME
+   ============================= */
+.navbar-shelfwise .dropdown-menu {
+  background-color: var(--sw-surface);
+  border: 1px solid var(--sw-border) !important;
+  border-radius: var(--sw-radius-md);
+  box-shadow: var(--sw-shadow-md);
+  min-width: 210px;
+}
+
+.navbar-shelfwise .dropdown-item {
+  color: var(--sw-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.navbar-shelfwise .dropdown-item:hover,
+.navbar-shelfwise .dropdown-item:focus {
+  background-color: var(--sw-emerald-soft);
+  color: var(--sw-emerald);
+}
+
+.navbar-shelfwise .dropdown-item.text-danger:hover,
+.navbar-shelfwise .dropdown-item.text-danger:focus {
+  background-color: #fee2e2;
+  color: #dc2626 !important;
+}
+
+.navbar-shelfwise .dropdown-item.text-danger:active {
+  background-color: #fecaca;
+  color: #b91c1c !important;
+}
+
+/* =============================
         BRAND BUTTONS
   ==============================
 */
@@ -214,22 +251,25 @@ body {
 /* =========================
       AUTH CARDS & FORMS
 ========================= */
-.login {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
+.login,
+.auth-wrapper {
   flex: 1;
-  padding: 2.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1.5rem 1rem;
 }
 
 .auth-card {
+  width: 100%;
+  max-width: 420px;
   background-color: var(--sw-surface);
   border: 1px solid var(--sw-border);
   border-radius: var(--sw-radius-lg);
-  padding: 2.5rem 2rem;
+  padding: 2.25rem 2rem;
   box-shadow: var(--sw-shadow-md);
+  margin: 0;
 }
 
 @media (max-width: 576px) {
@@ -296,11 +336,23 @@ body {
   border-color: var(--sw-border-strong);
   background-color: var(--sw-surface-soft);
   color: var(--sw-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .auth-toggle-btn:hover {
   color: var(--sw-emerald);
   background-color: var(--sw-emerald-soft);
+}
+
+.auth-toggle-btn:focus-visible {
+  outline: none;
+  border-color: var(--sw-emerald);
+  box-shadow: 0 0 0 0.25rem var(--sw-focus-ring);
 }
 
 /* =========================
@@ -674,8 +726,8 @@ footer.footer {
 
 dialog::backdrop {
   background-color: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
 }
 
 /* ==========================================================================
@@ -717,8 +769,8 @@ dialog#d.confirm-modal[open] {
   min-width: 24px;
 }
 
-#form-message{
-    padding-bottom: 1rem;
+#form-message {
+  padding-bottom: 1rem;
 }
 
 /* Danger Variant: Signup, Delete, Destructive actions */
@@ -741,7 +793,6 @@ dialog#d.confirm-modal[open] {
   color: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25);
 }
-
 
 /* Success / Green-themed Variant: Login, Update, Positive actions */
 .confirm-variant-success .confirm-icon-box {
