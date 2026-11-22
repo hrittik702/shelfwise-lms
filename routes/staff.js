@@ -20,9 +20,10 @@ router.post(
       req.flash('error', 'Username and password are required.');
       return res.redirect('/staff/login');
     }
-    const [rows] = await db.query('SELECT staff_id, name, password FROM staff WHERE username = ?', [
-      username,
-    ]);
+    const [rows] = await db.query(
+      'SELECT staff_id, name, password FROM staff WHERE username = ?',
+      [username],
+    );
     const staff = rows[0];
     const ok = staff && (await bcrypt.compare(password, staff.password));
     if (!ok) {
@@ -30,16 +31,16 @@ router.post(
       return res.redirect('/staff/login');
     }
     await new Promise((resolve, reject) =>
-      req.session.regenerate((err) => (err ? reject(err) : resolve()))
+      req.session.regenerate((err) => (err ? reject(err) : resolve())),
     );
     req.session.staffId = staff.staff_id;
     req.session.staffName = staff.name;
     await new Promise((resolve, reject) =>
-      req.session.save((err) => (err ? reject(err) : resolve()))
+      req.session.save((err) => (err ? reject(err) : resolve())),
     );
     req.flash('success', `Welcome, ${staff.name}.`);
     res.redirect('/');
-  })
+  }),
 );
 
 // Adding another staff requires already login staff
@@ -56,16 +57,18 @@ router.post(
     const password = req.body.password || '';
 
     if (!name || !username || password.length < 8) {
-      req.flash('error', 'Name, username and a password of at least 8 characters are required.');
+      req.flash(
+        'error',
+        'Name, username and a password of at least 8 characters are required.',
+      );
       return res.redirect('/staff/signup');
     }
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
     try {
-      await db.query('INSERT INTO staff (name, username, password) VALUES (?, ?, ?)', [
-        name,
-        username,
-        hash,
-      ]);
+      await db.query(
+        'INSERT INTO staff (name, username, password) VALUES (?, ?, ?)',
+        [name, username, hash],
+      );
     } catch (err) {
       if (err.code === 'ER_DUP_ENTRY') {
         req.flash('error', 'That username already exists.');
@@ -75,7 +78,7 @@ router.post(
     }
     req.flash('success', 'Staff account created.');
     res.redirect('/');
-  })
+  }),
 );
 
 // Improvement : Confirm Log Out box
@@ -87,7 +90,7 @@ router.get(
       res.clearCookie('lms-cookie');
       res.redirect('/staff/login');
     });
-  })
+  }),
 );
 
 module.exports = router;

@@ -1,6 +1,6 @@
 <% layout('/layout/boilerplate') %>
 
-<div class="container py-4 py-lg-5">
+<div class="issue-page container py-4 py-lg-5">
 
   <%
     const fmt = (d) => d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -11,49 +11,79 @@
     const maxLoansFor = (type) => (type === 'faculty' ? 5 : 3);
     const preMember = String(typeof selectedMemberId !== 'undefined' && selectedMemberId ? selectedMemberId : '');
     const preBook = String(typeof selectedBookId !== 'undefined' && selectedBookId ? selectedBookId : '');
-    const staffName = (typeof currUser !== 'undefined' && currUser) ? currUser.name : '—';
+    const staffName = (typeof currUser !== 'undefined' && currUser) ? (currUser.name || 'Library Staff') : '—';
+
+    const eligibleMembersCount = (members || []).filter(m => {
+      const max = maxLoansFor(m.member_type);
+      const active = Number(m.active_loans) || 0;
+      return m.status === 'active' && active < max;
+    }).length;
+
+    const availableBooksCount = (books || []).filter(b => (Number(b.available_copies) || 0) > 0).length;
   %>
 
   <!-- Back navigation -->
   <div class="mb-4">
-    <a href="/" class="btn btn-outline-secondary btn-sm">
-      <span aria-hidden="true">&larr;</span> Back to Home
+    <a href="/circulation" class="issue-back-link">
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+      <span>Back to Circulation</span>
     </a>
   </div>
 
   <!-- Heading -->
   <div class="mb-4">
-    <h1 class="h3 fw-bold mb-1">Issue Book</h1>
-    <p class="text-secondary mb-0">Select a member and a book, then review the loan before confirming.</p>
+    <h1 class="issue-title h3 fw-bold mb-1">Issue a Book</h1>
+    <p class="issue-subtitle mb-0">Create a new loan by selecting an eligible member and an available book.</p>
   </div>
 
   <% if (members.length === 0 || books.length === 0) { %>
-    <div class="alert alert-warning">
-      <% if (members.length === 0) { %>
-        No members are registered yet. <a href="/members/new">Register a member</a> first.
-      <% } else { %>
-        No books are in the catalog yet. <a href="/books/new">Add a book</a> first.
-      <% } %>
+    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-4 d-flex align-items-center gap-3">
+      <i class="bi bi-exclamation-triangle-fill text-warning fs-3 flex-shrink-0" aria-hidden="true"></i>
+      <div>
+        <% if (members.length === 0) { %>
+          <div class="fw-bold mb-1">No members are registered yet</div>
+          <div class="text-secondary small">Please <a href="/members/new" class="alert-link">register a member</a> before issuing books.</div>
+        <% } else { %>
+          <div class="fw-bold mb-1">No books in catalog yet</div>
+          <div class="text-secondary small">Please <a href="/books/new" class="alert-link">add a book</a> before creating loans.</div>
+        <% } %>
+      </div>
     </div>
   <% } else { %>
 
   <form action="/circulation/issue" method="POST" id="issueForm">
     <div class="row g-4">
 
-      <!-- LEFT: selection -->
-      <div class="col-12 col-lg-8">
+      <!-- LEFT: selection panel -->
+      <div class="col-12 col-lg-8 issue-selection-panel">
 
         <!-- Step 1: Member -->
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div class="card-header bg-white border-bottom p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h2 class="h6 fw-bold mb-0">
-              <span class="badge rounded-pill text-bg-success me-2">1</span>Select Member
-            </h2>
-            <input type="search" id="memberSearch" class="form-control form-control-sm" style="max-width:240px;"
-                   placeholder="Search name or type" aria-label="Search members">
+        <div class="card issue-selection-card overflow-hidden mb-4">
+          <div class="card-header issue-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="issue-step-badge" aria-hidden="true">1</span>
+              <h2 class="h6 fw-bold mb-0 text-dark">Select Member</h2>
+              <span class="issue-header-count ms-1">(<%= eligibleMembersCount %> of <%= members.length %> eligible)</span>
+            </div>
+            <div class="issue-search-box">
+              <i class="bi bi-search issue-search-icon" aria-hidden="true"></i>
+              <label for="memberSearch" class="visually-hidden">Search members</label>
+              <input type="search" id="memberSearch" class="form-control form-control-sm issue-search-input"
+                     placeholder="Search name or type..." aria-label="Search members">
+            </div>
           </div>
 
-          <div class="list-group list-group-flush overflow-auto" style="max-height:300px;" id="memberList">
+          <% if (eligibleMembersCount === 0) { %>
+            <div class="issue-ineligible-banner p-3 d-flex align-items-start gap-2">
+              <i class="bi bi-person-x-fill text-warning flex-shrink-0 fs-5 mt-1" aria-hidden="true"></i>
+              <div>
+                <div class="fw-bold small">No eligible members available</div>
+                <div class="small">All registered members are currently suspended or have reached their borrowing limits.</div>
+              </div>
+            </div>
+          <% } %>
+
+          <div class="list-group list-group-flush issue-list-scroll" id="memberList">
             <% members.forEach((m) => {
               const max = maxLoansFor(m.member_type);
               const active = Number(m.active_loans) || 0;
@@ -61,127 +91,212 @@
               const atLimit = active >= max;
               const blocked = suspended || atLimit;
               const pct = Math.min(100, Math.round((active / max) * 100));
+              const isPreselected = preMember === String(m.member_id) && !blocked;
             %>
-              <label class="list-group-item d-flex align-items-center gap-3 sw-row <%= blocked ? 'opacity-50' : '' %>"
-                     data-search="<%= (m.name + ' ' + m.member_type).toLowerCase() %>"
-                     style="cursor:<%= blocked ? 'not-allowed' : 'pointer' %>;">
-                <input class="form-check-input mt-0 flex-shrink-0" type="radio" name="member_id"
-                       value="<%= m.member_id %>"
-                       data-name="<%= m.name %>"
-                       data-type="<%= m.member_type %>"
-                       data-active="<%= active %>"
-                       data-max="<%= max %>"
-                       <%= preMember === String(m.member_id) && !blocked ? 'checked' : '' %>
-                       <%= blocked ? 'disabled' : '' %> required>
+              <label class="list-group-item issue-row sw-row d-flex align-items-center justify-content-between <%= blocked ? 'is-blocked' : '' %> <%= isPreselected ? 'issue-row-selected bg-success-subtle' : '' %>"
+                     data-search="<%= (m.name + ' ' + m.member_type).toLowerCase() %>">
+                <!-- Left: radio and member details (single horizontal level) -->
+                <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1 me-3">
+                  <input class="form-check-input mt-0 flex-shrink-0 issue-radio" type="radio" name="member_id"
+                         value="<%= m.member_id %>"
+                         data-name="<%= m.name %>"
+                         data-type="<%= m.member_type %>"
+                         data-active="<%= active %>"
+                         data-max="<%= max %>"
+                         <%= isPreselected ? 'checked' : '' %>
+                         <%= blocked ? 'disabled' : '' %> required>
+                  <span class="fw-semibold text-dark issue-item-name text-truncate" title="<%= m.name %>"><%= m.name %></span>
+                  <span class="issue-type-badge text-capitalize flex-shrink-0"><%= m.member_type %></span>
+                </div>
 
-                <div class="flex-grow-1">
-                  <div class="d-flex flex-wrap align-items-center gap-2">
-                    <span class="fw-semibold"><%= m.name %></span>
-                    <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize"><%= m.member_type %></span>
-                    <% if (suspended) { %>
-                      <span class="badge rounded-pill text-bg-danger">Suspended</span>
-                    <% } else if (atLimit) { %>
-                      <span class="badge rounded-pill text-bg-warning">Limit reached</span>
-                    <% } %>
-                  </div>
-                  <div class="d-flex align-items-center gap-2 mt-1">
-                    <div class="progress flex-grow-1" style="height:6px;max-width:160px;" role="progressbar"
-                         aria-valuenow="<%= active %>" aria-valuemin="0" aria-valuemax="<%= max %>">
-                      <div class="progress-bar <%= atLimit ? 'bg-warning' : 'bg-success' %>" style="width:<%= pct %>%"></div>
+                <!-- Right: loans status with circular progress -->
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                  <% if (suspended) { %>
+                    <span class="badge issue-badge-suspended">Suspended</span>
+                  <% } else if (atLimit) { %>
+                    <span class="badge issue-badge-limit">Limit reached</span>
+                  <% } %>
+
+                  <div class="issue-circle-wrapper d-inline-flex align-items-center gap-2"
+                       title="<%= active %> of <%= max %> loans used (<%= pct %>%)"
+                       aria-label="<%= active %> of <%= max %> loans used">
+                    <div class="issue-circle-progress" aria-hidden="true">
+                      <svg class="issue-circle-svg" width="22" height="22" viewBox="0 0 24 24">
+                        <circle class="issue-circle-track" cx="12" cy="12" r="9.5" />
+                        <circle class="issue-circle-bar <%= atLimit ? 'issue-circle-bar-danger' : (pct >= 66 ? 'issue-circle-bar-warning' : 'issue-circle-bar-success') %>"
+                                cx="12" cy="12" r="9.5"
+                                stroke-dasharray="59.69"
+                                stroke-dashoffset="<%= (59.69 * (1 - pct / 100)).toFixed(1) %>" />
+                      </svg>
                     </div>
-                    <span class="small text-secondary"><%= active %> of <%= max %> loans used</span>
+                    <span class="issue-stat-text small text-secondary font-monospace"><%= active %> of <%= max %> loans</span>
                   </div>
                 </div>
               </label>
             <% }) %>
-            <div class="list-group-item text-center text-secondary small d-none" id="memberEmpty">No members match your search.</div>
+            <div class="list-group-item text-center text-secondary small py-4 d-none" id="memberEmpty">
+              No members match your search.
+            </div>
           </div>
         </div>
 
         <!-- Step 2: Book -->
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-          <div class="card-header bg-white border-bottom p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h2 class="h6 fw-bold mb-0">
-              <span class="badge rounded-pill text-bg-success me-2">2</span>Select Book
-            </h2>
-            <input type="search" id="bookSearch" class="form-control form-control-sm" style="max-width:240px;"
-                   placeholder="Search title or ISBN" aria-label="Search books">
+        <div class="card issue-selection-card overflow-hidden">
+          <div class="card-header issue-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="issue-step-badge" aria-hidden="true">2</span>
+              <h2 class="h6 fw-bold mb-0 text-dark">Select Book</h2>
+              <span class="issue-header-count ms-1">(<%= availableBooksCount %> of <%= books.length %> available)</span>
+            </div>
+            <div class="issue-search-box">
+              <i class="bi bi-search issue-search-icon" aria-hidden="true"></i>
+              <label for="bookSearch" class="visually-hidden">Search books</label>
+              <input type="search" id="bookSearch" class="form-control form-control-sm issue-search-input"
+                     placeholder="Search title or ISBN..." aria-label="Search books">
+            </div>
           </div>
 
-          <div class="list-group list-group-flush overflow-auto" style="max-height:300px;" id="bookList">
+          <% if (availableBooksCount === 0) { %>
+            <div class="issue-ineligible-banner p-3 d-flex align-items-start gap-2">
+              <i class="bi bi-journal-x text-warning flex-shrink-0 fs-5 mt-1" aria-hidden="true"></i>
+              <div>
+                <div class="fw-bold small">No books currently available</div>
+                <div class="small">Every catalog copy is currently issued or unavailable.</div>
+              </div>
+            </div>
+          <% } %>
+
+          <div class="list-group list-group-flush issue-list-scroll" id="bookList">
             <% books.forEach((b) => {
               const available = Number(b.available_copies) || 0;
               const total = Number(b.total_copies) || 0;
               const out = available <= 0;
+              const isLow = available === 1 || (total > 0 && (available / total) <= 0.25);
               const pct = total > 0 ? Math.round((available / total) * 100) : 0;
+              const isPreselected = preBook === String(b.book_id) && !out;
             %>
-              <label class="list-group-item d-flex align-items-center gap-3 sw-row <%= out ? 'opacity-50' : '' %>"
-                     data-search="<%= (b.title + ' ' + b.isbn).toLowerCase() %>"
-                     style="cursor:<%= out ? 'not-allowed' : 'pointer' %>;">
-                <input class="form-check-input mt-0 flex-shrink-0" type="radio" name="book_id"
-                       value="<%= b.book_id %>"
-                       data-title="<%= b.title %>"
-                       data-isbn="<%= b.isbn %>"
-                       data-available="<%= available %>"
-                       data-total="<%= total %>"
-                       <%= preBook === String(b.book_id) && !out ? 'checked' : '' %>
-                       <%= out ? 'disabled' : '' %> required>
+              <label class="list-group-item issue-row sw-row d-flex align-items-center justify-content-between <%= out ? 'is-blocked' : '' %> <%= isPreselected ? 'issue-row-selected bg-success-subtle' : '' %>"
+                     data-search="<%= (b.title + ' ' + b.isbn).toLowerCase() %>">
+                <!-- Left: radio and book details (single horizontal level) -->
+                <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1 me-3">
+                  <input class="form-check-input mt-0 flex-shrink-0 issue-radio" type="radio" name="book_id"
+                         value="<%= b.book_id %>"
+                         data-title="<%= b.title %>"
+                         data-isbn="<%= b.isbn %>"
+                         data-available="<%= available %>"
+                         data-total="<%= total %>"
+                         <%= isPreselected ? 'checked' : '' %>
+                         <%= out ? 'disabled' : '' %> required>
+                  <span class="fw-semibold text-dark issue-item-name text-truncate" title="<%= b.title %>"><%= b.title %></span>
+                  <span class="small text-secondary font-monospace flex-shrink-0"><%= b.isbn %></span>
+                </div>
 
-                <div class="flex-grow-1">
-                  <div class="fw-semibold"><%= b.title %></div>
-                  <div class="small text-secondary font-monospace"><%= b.isbn %></div>
-                  <div class="d-flex align-items-center gap-2 mt-1">
-                    <div class="progress flex-grow-1" style="height:6px;max-width:160px;" role="progressbar"
-                         aria-valuenow="<%= available %>" aria-valuemin="0" aria-valuemax="<%= total %>">
-                      <div class="progress-bar <%= out ? 'bg-danger' : (pct <= 25 ? 'bg-warning' : 'bg-success') %>" style="width:<%= pct %>%"></div>
+                <!-- Right: availability status with circular progress -->
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                  <% if (out) { %>
+                    <span class="badge issue-badge-out">None available</span>
+                  <% } else if (isLow) { %>
+                    <span class="badge issue-badge-low">Low stock</span>
+                  <% } %>
+
+                  <div class="issue-circle-wrapper d-inline-flex align-items-center gap-2"
+                       title="<%= out ? '0 of ' + total + ' available' : available + ' of ' + total + ' available' %> (<%= pct %>%)"
+                       aria-label="<%= out ? '0 of ' + total + ' available' : available + ' of ' + total + ' available' %>">
+                    <div class="issue-circle-progress" aria-hidden="true">
+                      <svg class="issue-circle-svg" width="22" height="22" viewBox="0 0 24 24">
+                        <circle class="issue-circle-track" cx="12" cy="12" r="9.5" />
+                        <circle class="issue-circle-bar <%= out ? 'issue-circle-bar-danger' : (isLow ? 'issue-circle-bar-warning' : 'issue-circle-bar-success') %>"
+                                cx="12" cy="12" r="9.5"
+                                stroke-dasharray="59.69"
+                                stroke-dashoffset="<%= (59.69 * (1 - pct / 100)).toFixed(1) %>" />
+                      </svg>
                     </div>
-                    <span class="small text-secondary"><%= out ? 'None available' : available + ' of ' + total + ' available' %></span>
+                    <span class="issue-stat-text small text-secondary font-monospace">
+                      <%= out ? '0 of ' + total + ' available' : available + ' of ' + total + ' available' %>
+                    </span>
                   </div>
                 </div>
               </label>
             <% }) %>
-            <div class="list-group-item text-center text-secondary small d-none" id="bookEmpty">No books match your search.</div>
+            <div class="list-group-item text-center text-secondary small py-4 d-none" id="bookEmpty">
+              No books match your search.
+            </div>
           </div>
         </div>
       </div>
 
       <!-- RIGHT: loan summary -->
       <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-sticky" style="top:1rem;">
-          <div class="card-header bg-white border-bottom p-3">
-            <h2 class="h6 fw-bold mb-0">Loan Summary</h2>
+        <div class="issue-summary-card bg-white shadow-sm" aria-live="polite">
+          <div class="issue-summary-header p-3">
+            <h2 class="h6 fw-bold mb-0 text-dark">Loan Summary</h2>
           </div>
 
-          <div class="card-body p-3">
-            <dl class="mb-3 small">
-              <dt class="text-secondary fw-normal">Member</dt>
-              <dd class="fw-semibold mb-2" id="sumMember"><span class="text-secondary fw-normal">Not selected</span></dd>
-
-              <dt class="text-secondary fw-normal">Loans after this issue</dt>
-              <dd class="fw-semibold mb-2" id="sumLoans">—</dd>
-
-              <dt class="text-secondary fw-normal">Book</dt>
-              <dd class="fw-semibold mb-2" id="sumBook"><span class="text-secondary fw-normal">Not selected</span></dd>
-
-              <dt class="text-secondary fw-normal">Copies left after this issue</dt>
-              <dd class="fw-semibold mb-0" id="sumCopies">—</dd>
-            </dl>
-
-            <div class="border rounded-3 p-3 mb-3 bg-light small">
-              <div class="d-flex justify-content-between"><span class="text-secondary">Issue date</span><span class="fw-semibold"><%= fmt(today) %></span></div>
-              <div class="d-flex justify-content-between"><span class="text-secondary">Due date</span><span class="fw-semibold"><%= fmt(due) %></span></div>
-              <div class="d-flex justify-content-between"><span class="text-secondary">Issued by</span><span class="fw-semibold"><%= staffName %></span></div>
+          <div class="p-3 p-md-4">
+            <!-- Group 1: Selected Member -->
+            <div class="issue-summary-group mb-3 pb-3 border-bottom">
+              <div class="issue-group-label text-uppercase mb-2">Selected Member</div>
+              <div class="mb-2">
+                <div class="text-secondary small mb-1">Member Name &amp; Type</div>
+                <div class="fw-semibold text-dark" id="sumMember">
+                  <span class="text-secondary fw-normal">Not selected</span>
+                </div>
+              </div>
+              <div>
+                <div class="text-secondary small mb-1">Loans after this issue</div>
+                <div class="fw-semibold text-dark font-monospace" id="sumLoans">—</div>
+              </div>
             </div>
 
-            <ul class="small text-secondary ps-3 mb-3">
-              <li>Loan period is 14 days.</li>
-              <li>Fine: ₹2 per day after the due date.</li>
-              <li>Dates and staff are set by the server.</li>
-            </ul>
+            <!-- Group 2: Selected Book -->
+            <div class="issue-summary-group mb-3 pb-3 border-bottom">
+              <div class="issue-group-label text-uppercase mb-2">Selected Book</div>
+              <div class="mb-2">
+                <div class="text-secondary small mb-1">Book Title</div>
+                <div class="fw-semibold text-dark" id="sumBook">
+                  <span class="text-secondary fw-normal">Not selected</span>
+                </div>
+              </div>
+              <div>
+                <div class="text-secondary small mb-1">Copies left after this issue</div>
+                <div class="fw-semibold text-dark font-monospace" id="sumCopies">—</div>
+              </div>
+            </div>
 
+            <!-- Group 3: Loan Details -->
+            <div class="issue-summary-group mb-3 pb-3 border-bottom">
+              <div class="issue-group-label text-uppercase mb-2">Loan Details</div>
+              <div class="issue-loan-details-box p-3 rounded-3 mb-2">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary small">Issue date</span>
+                  <span class="fw-semibold text-dark small font-monospace"><%= fmt(today) %></span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary small">Due date</span>
+                  <span class="fw-semibold text-dark small font-monospace"><%= fmt(due) %></span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary small">Loan duration</span>
+                  <span class="fw-semibold text-dark small">14 days</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-secondary small">Issued by</span>
+                  <span class="fw-semibold text-dark small"><%= staffName %></span>
+                </div>
+              </div>
+              <div class="issue-policy-note small text-secondary">
+                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                Fine: ₹2 per overdue day after the due date. Dates and staff recorded by server.
+              </div>
+            </div>
+
+            <!-- Action buttons -->
             <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-success" id="issueBtn" disabled>Confirm &amp; Issue Book</button>
-              <a href="/" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="issue-btn-submit" id="issueBtn" disabled>
+                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                <span>Confirm &amp; Issue Book</span>
+              </button>
+              <a href="/circulation" class="issue-btn-cancel">Cancel</a>
             </div>
           </div>
         </div>
@@ -193,71 +308,140 @@
   <script>
     (function () {
       const form = document.getElementById('issueForm');
+      if (!form) return;
+
       const btn = document.getElementById('issueBtn');
       const sumMember = document.getElementById('sumMember');
       const sumLoans = document.getElementById('sumLoans');
       const sumBook = document.getElementById('sumBook');
       const sumCopies = document.getElementById('sumCopies');
 
-      function setText(el, text) { el.textContent = text; }
+      // Cache row collections
+      const memberRows = Array.from(document.querySelectorAll('#memberList .sw-row'));
+      const bookRows = Array.from(document.querySelectorAll('#bookList .sw-row'));
+
+      function setText(el, text) {
+        if (el) el.textContent = text;
+      }
+
+      function updateRowHighlight(rows) {
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          const radio = row.querySelector('input[type="radio"]');
+          const isChecked = Boolean(radio && radio.checked);
+          row.classList.toggle('issue-row-selected', isChecked);
+          row.classList.toggle('bg-success-subtle', isChecked);
+        }
+      }
 
       function update() {
         const m = form.querySelector('input[name="member_id"]:checked');
         const b = form.querySelector('input[name="book_id"]:checked');
 
-        form.querySelectorAll('.sw-row').forEach(function (row) {
-          const r = row.querySelector('input');
-          row.classList.toggle('bg-success-subtle', r.checked);
-        });
+        updateRowHighlight(memberRows);
+        updateRowHighlight(bookRows);
 
         if (m) {
-          const after = Number(m.dataset.active) + 1;
+          const active = Number(m.dataset.active) || 0;
+          const max = m.dataset.max || 3;
+          const after = active + 1;
           setText(sumMember, m.dataset.name + ' (' + m.dataset.type + ')');
-          setText(sumLoans, after + ' of ' + m.dataset.max);
+          setText(sumLoans, after + ' of ' + max);
         } else {
           setText(sumMember, 'Not selected');
           setText(sumLoans, '—');
         }
 
         if (b) {
-          const left = Number(b.dataset.available) - 1;
+          const avail = Number(b.dataset.available) || 0;
+          const total = b.dataset.total || 0;
+          const left = Math.max(0, avail - 1);
           setText(sumBook, b.dataset.title);
-          setText(sumCopies, left + ' of ' + b.dataset.total);
+          setText(sumCopies, left + ' of ' + total);
         } else {
           setText(sumBook, 'Not selected');
           setText(sumCopies, '—');
         }
 
-        btn.disabled = !(m && b);
+        const isReady = Boolean(m && b);
+        btn.disabled = !isReady;
+
+        if (isReady) {
+          form.dataset.confirm = 'Issue "' + b.dataset.title + '" to ' + m.dataset.name + ' (' + m.dataset.type + ') for a 14-day loan?';
+          form.dataset.title = 'Confirm Book Loan';
+          form.dataset.btn = 'Confirm & Issue';
+          form.dataset.variant = 'success';
+        } else {
+          delete form.dataset.confirm;
+          delete form.dataset.title;
+          delete form.dataset.btn;
+          delete form.dataset.variant;
+        }
       }
 
-      function bindSearch(inputId, listId, emptyId) {
+      // Debounce helper
+      function debounce(fn, delay) {
+        let timer = null;
+        return function () {
+          const context = this;
+          const args = arguments;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            fn.apply(context, args);
+          }, delay);
+        };
+      }
+
+      // Search filter with cached rows and debounce
+      function bindSearch(inputId, rows, emptyId) {
         const input = document.getElementById(inputId);
-        const rows = document.querySelectorAll('#' + listId + ' .sw-row');
         const empty = document.getElementById(emptyId);
-        input.addEventListener('input', function () {
+        if (!input || !empty) return;
+
+        const filter = debounce(function () {
           const q = input.value.trim().toLowerCase();
           let shown = 0;
-          rows.forEach(function (row) {
+          for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
             const match = !q || row.dataset.search.indexOf(q) !== -1;
             row.classList.toggle('d-none', !match);
             if (match) shown++;
-          });
+          }
           empty.classList.toggle('d-none', shown !== 0);
+        }, 180);
+
+        input.addEventListener('input', filter);
+      }
+
+      bindSearch('memberSearch', memberRows, 'memberEmpty');
+      bindSearch('bookSearch', bookRows, 'bookEmpty');
+
+      // Run updates only on selection changes
+      form.addEventListener('change', update);
+
+      // Double-submission protection & Issuing state handling:
+      // When modal's confirm button is clicked
+      const modalConfirmBtn = document.getElementById('confirm');
+      if (modalConfirmBtn) {
+        modalConfirmBtn.addEventListener('click', function () {
+          if (form.dataset.confirm && !btn.disabled) {
+            btn.disabled = true;
+            btn.textContent = 'Issuing...';
+            modalConfirmBtn.disabled = true;
+            modalConfirmBtn.textContent = 'Issuing...';
+          }
         });
       }
 
-      bindSearch('memberSearch', 'memberList', 'memberEmpty');
-      bindSearch('bookSearch', 'bookList', 'bookEmpty');
-
-      form.addEventListener('change', update);
-
-      // prevent double submit
-      form.addEventListener('submit', function () {
-        btn.disabled = true;
-        btn.textContent = 'Issuing...';
+      // Direct submit fallback (if modal is bypassed or disabled)
+      form.addEventListener('submit', function (e) {
+        if (!form.dataset.confirm && !btn.disabled) {
+          btn.disabled = true;
+          btn.textContent = 'Issuing...';
+        }
       });
 
+      // Initialize state
       update();
     })();
   </script>

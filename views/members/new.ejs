@@ -1,107 +1,142 @@
 <% layout('/layout/boilerplate') %>
 
-<div class="container py-4 py-lg-5">
+<div class="member-form-page container py-4 py-lg-5">
   <!-- Back navigation -->
   <div class="mb-4">
-    <a href="/members" class="btn btn-outline-secondary btn-sm">
-      <span aria-hidden="true">&larr;</span>
-      Back to Members
+    <a href="/members" class="members-back-link">
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+      <span>Back to Members</span>
     </a>
   </div>
 
-  <!-- Add form card -->
-  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-    <!-- Heading -->
-    <div class="card-header bg-white border-bottom p-4">
-      <h1 class="h3 fw-bold mb-2">Register Member</h1>
+  <!-- Heading -->
+  <div class="mb-4">
+    <h1 class="members-title h3 fw-bold mb-1">Register Member</h1>
+    <p class="members-subtitle mb-0 text-secondary">
+      Add a new student or faculty member to the library.
+    </p>
+  </div>
 
-      <p class="text-secondary mb-0">Add a new student or faculty member to the library.</p>
+  <!-- Registration Card -->
+  <div class="card members-form-card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="card-header bg-white border-bottom p-3 p-md-4">
+      <h2 class="h5 fw-bold mb-1 text-dark">Member Profile</h2>
+      <p class="text-secondary small mb-0">
+        Fields marked with <span class="text-danger">*</span> are required.
+      </p>
     </div>
 
-    <!-- Form -->
-    <div class="card-body p-4">
-      <form action="/members" method="POST">
-        <!-- Name -->
-        <div class="mb-4">
-          <label for="name" class="form-label fw-semibold"> Full Name </label>
+    <div class="card-body p-3 p-md-4">
+      <form action="/members" method="POST" id="newMemberForm">
+        <!-- Personal Information -->
+        <div class="members-form-section mb-4">
+          <div class="members-section-label text-uppercase text-secondary small fw-bold mb-3">Personal Details</div>
 
-          <input
-            type="text"
-            class="form-control"
-            id="name"
-            name="name"
-            maxlength="30"
-            autocomplete="name"
-            required
-          />
-        </div>
-
-        <!-- Email and Phone -->
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-md-6">
-            <label for="email" class="form-label fw-semibold"> Email </label>
-
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              name="email"
-              maxlength="40"
-              autocomplete="email"
-              required
-            />
-          </div>
-
-          <div class="col-12 col-md-6">
-            <label for="phone" class="form-label fw-semibold"> Phone </label>
-
+          <!-- Name -->
+          <div class="mb-3">
+            <label for="name" class="form-label fw-semibold">
+              Full Name <span class="text-danger">*</span>
+            </label>
             <input
               type="text"
               class="form-control"
-              id="phone"
-              name="phone"
-              minlength="10"
-              maxlength="10"
-              pattern="[0-9]{10}"
-              inputmode="numeric"
-              autocomplete="tel"
-              title="Enter exactly 10 numeric digits."
+              id="name"
+              name="name"
+              placeholder="e.g. Aditi Sharma"
+              maxlength="50"
+              autocomplete="name"
               required
-            />
+            >
+          </div>
 
-            <div class="form-text">Enter exactly 10 digits.</div>
+          <!-- Email & Phone -->
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="email" class="form-label fw-semibold">
+                Email Address <span class="text-danger">*</span>
+              </label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                placeholder="e.g. aditi.sharma@college.edu"
+                maxlength="100"
+                autocomplete="email"
+                required
+              >
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="phone" class="form-label fw-semibold">
+                Contact Phone <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control font-monospace"
+                id="phone"
+                name="phone"
+                minlength="10"
+                maxlength="10"
+                pattern="[0-9]{10}"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="e.g. 9876543210"
+                title="Enter exactly 10 numeric digits."
+                required
+              >
+              <div class="form-text small text-secondary">
+                Exact 10 digits without country code.
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Member type -->
-        <div class="mb-4">
-          <label for="member_type" class="form-label fw-semibold"> Member Type </label>
+        <hr class="my-4 text-muted opacity-25">
 
-          <select class="form-select" id="member_type" name="member_type" required>
-            <option value="" selected disabled>Select member type</option>
-            <option value="student">Student</option>
-            <option value="faculty">Faculty</option>
-          </select>
+        <!-- Membership Details -->
+        <div class="members-form-section mb-4">
+          <div class="members-section-label text-uppercase text-secondary small fw-bold mb-3">Membership Type</div>
 
-          <div class="form-text">Students can hold up to 3 books at a time, faculty up to 5.</div>
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="member_type" class="form-label fw-semibold">
+                Role / Type <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="member_type" name="member_type" required>
+                <option value="" selected disabled>Select membership tier</option>
+                <option value="student">Student (Holds up to 3 books)</option>
+                <option value="faculty">Faculty (Holds up to 5 books)</option>
+              </select>
+              <div class="form-text small text-secondary">
+                Determines simultaneous borrowing limit under library policy.
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Automatic information -->
-        <div class="border rounded-3 p-3 mb-4">
-          <h2 class="h6 fw-bold mb-2">Automatic Settings</h2>
+        <hr class="my-4 text-muted opacity-25">
 
+        <!-- Automatic Information Box -->
+        <div class="p-3 bg-light rounded-3 mb-4 border">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-info-circle-fill text-success" aria-hidden="true"></i>
+            <span class="fw-semibold text-dark small">Automatic Setup</span>
+          </div>
           <p class="text-secondary small mb-0">
-            The join date is set to today and the status starts as
-            <span class="fw-semibold">Active</span> when the member is registered. Status can be
-            changed later from the update page.
+            Join date is automatically set to today and initial account status is marked
+            <span class="badge text-bg-success-subtle text-success border border-success-subtle">Active</span>.
+            Account status can be suspended later if borrowing restrictions are required.
           </p>
         </div>
 
-        <!-- Form actions -->
-        <div class="d-flex flex-wrap justify-content-end gap-2">
-          <a href="/members" class="btn btn-outline-secondary"> Cancel </a>
-
-          <button type="submit" class="btn btn-success px-4">Register Member</button>
+        <!-- Form Actions -->
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 pt-3 border-top">
+          <a href="/members" class="members-btn-secondary px-4">Cancel</a>
+          <button type="submit" class="members-btn-primary">
+            <i class="bi bi-person-check-fill members-btn-icon-gold me-1" aria-hidden="true"></i>
+            <span>Register Member</span>
+          </button>
         </div>
       </form>
     </div>

@@ -17,6 +17,7 @@ const booksRouter = require('./routes/books.js');
 const membersRouter = require('./routes/members.js');
 const staffRouter = require('./routes/staff.js');
 const circulationRouter = require('./routes/circulation.js');
+const fineRouter = require('./routes/fine.js');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -58,7 +59,7 @@ app.use(
       sameSite: 'lax',
       secure: false,
     },
-  })
+  }),
 );
 
 // Flash messages
@@ -87,6 +88,8 @@ app.use(requireAuth);
 app.use('/books', booksRouter);
 app.use('/members', membersRouter);
 app.use('/circulation', circulationRouter);
+app.use('/fine', fineRouter);
+app.use('/fines', fineRouter);
 
 app.get('/', (req, res) => {
   res.render('index.ejs');

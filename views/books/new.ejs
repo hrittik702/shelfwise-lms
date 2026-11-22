@@ -1,227 +1,224 @@
-<% layout("/layout/boilerplate") %>
-<div class="container py-4 py-lg-5">
-  <!-- Page Header -->
+<% layout('/layout/boilerplate') %>
+
+<div class="book-form-page container py-4 py-lg-5">
+  <!-- Back navigation -->
   <div class="mb-4">
-    <a href="/books" class="btn btn-outline-success btn-sm mb-3">
-      <i class="bi bi-arrow-left me-2"></i>
-      Back to Book Catalog
+    <a href="/books" class="books-back-link">
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+      <span>Back to Book Catalog</span>
     </a>
-    <h1 class="h3 fw-bold mb-2">Add New Book</h1>
-    <p class="text-secondary mb-0">
-      Enter the book details to add it to the library catalog.
+  </div>
+
+  <!-- Heading -->
+  <div class="mb-4">
+    <h1 class="books-title h3 fw-bold mb-1">Add New Book</h1>
+    <p class="books-subtitle mb-0 text-secondary">
+      Register a new title and configure its library inventory.
     </p>
   </div>
 
-  <!-- Add Book Form -->
-  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-    <div class="card-header bg-white border-bottom p-4">
-      <h2 class="h5 fw-bold mb-1">Book Information</h2>
+  <!-- Add Book Form Card -->
+  <div class="card books-form-card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="card-header bg-white border-bottom p-3 p-md-4">
+      <h2 class="h5 fw-bold mb-1 text-dark">Book Information</h2>
       <p class="text-secondary small mb-0">
-        Fields marked with <span style="color: red;">*</span> are required.
+        Fields marked with <span class="text-danger">*</span> are required.
       </p>
     </div>
-    <div class="card-body p-4">
-      <form action="/books" method="POST">
-        <!-- ISBN -->
-        <div class="mb-4">
-          <label for="isbn" class="form-label fw-semibold">ISBN <span style="color: red;">*</span></label>
-          <input
-            type="text"
-            class="form-control"
-            id="isbn"
-            name="isbn"
-            placeholder="Enter 13-digit ISBN"
-            minlength="13"
-            maxlength="13"
-            pattern="[0-9]{13}"
-            inputmode="numeric"
-            title="ISBN must contain exactly 13 digits."
-            required
-          >
-        </div>
 
-        <!-- Title -->
-        <div class="mb-4">
-          <label for="title" class="form-label fw-semibold">Book Title <span style="color: red;">*</span></label>
-          <input
-            type="text"
-            class="form-control"
-            id="title"
-            name="title"
-            placeholder="Enter book title"
-            maxlength="50"
-            required
-          >
-        </div>
+    <div class="card-body p-3 p-md-4">
+      <form action="/books" method="POST" id="newBookForm">
+        <!-- Section 1: Core Book Information -->
+        <div class="books-form-section mb-4">
+          <div class="books-section-label text-uppercase text-secondary small fw-bold mb-3">Core Information</div>
 
-        <!-- Author and Publisher -->
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-md-6">
-            <label for="author" class="form-label fw-semibold">Author <span style="color: red;">*</span></label>
+          <!-- Title -->
+          <div class="mb-3">
+            <label for="title" class="form-label fw-semibold">
+              Book Title <span class="text-danger">*</span>
+            </label>
             <input
               type="text"
               class="form-control"
-              id="author"
-              name="author"
-              placeholder="Enter author name"
-              maxlength="30"
+              id="title"
+              name="title"
+              placeholder="e.g. Introduction to Algorithms"
+              maxlength="100"
               required
             >
           </div>
 
-          <div class="col-12 col-md-6">
-            <label for="publisher" class="form-label fw-semibold">
-              Publisher
-            </label>
+          <!-- Author and ISBN -->
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="author" class="form-label fw-semibold">
+                Author <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="author"
+                name="author"
+                placeholder="e.g. Thomas H. Cormen"
+                maxlength="50"
+                required
+              >
+            </div>
 
-            <input
-              type="text"
-              class="form-control"
-              id="publisher"
-              name="publisher"
-              placeholder="Enter publisher name"
-              maxlength="30"
-            >
-          </div>
-
-        </div>
-
-        <!-- Publication Year and Category -->
-       <div class="row g-3 mb-4">
-
-  <div class="col-12 col-md-6">
-    <label for="pub_year" class="form-label fw-semibold">
-      Publication Year <span style="color: red;">*</span>
-    </label>
-
-    <input
-      type="number"
-      class="form-control"
-      id="pub_year"
-      name="pub_year"
-      min="1901"
-      max="2155"
-      step="1"
-      placeholder="e.g. 2024"
-      required
-    >
-  </div>
-
-  <div class="col-12 col-md-6">
-    <label for="category_id" class="form-label fw-semibold">
-      Category <span style="color: red;">*</span>
-    </label>
-
-    <select
-      class="form-select"
-      id="category_id"
-      name="category_id"
-      required
-    >
-      <option value="" selected disabled>
-        Select a category
-      </option>
-
-      <% categories.forEach(category => { %>
-        <option value="<%= category.category_id %>">
-          <%= category.category_name %>
-        </option>
-      <% }) %>
-
-      <option value="other">Other (Add new category)</option>
-    </select>
-
-    <!-- Shown only when "Other" is selected -->
-    <div id="newCategoryWrapper" class="mt-3 d-none">
-      <label for="new_category_name" class="form-label fw-semibold">
-        New Category Name
-      </label>
-
-      <input
-        type="text"
-        class="form-control"
-        id="new_category_name"
-        name="new_category_name"
-        maxlength="20"
-        placeholder="e.g. Robotics"
-      >
-
-      <div class="form-text">
-        Maximum 20 characters.
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  (function () {
-    const select = document.getElementById('category_id');
-    const wrapper = document.getElementById('newCategoryWrapper');
-    const input = document.getElementById('new_category_name');
-
-    function toggleNewCategory() {
-      const isOther = select.value === 'other';
-      wrapper.classList.toggle('d-none', !isOther);
-      input.required = isOther;
-      input.disabled = !isOther;   // a hidden field is not submitted
-      if (isOther) input.focus();
-      else input.value = '';
-    }
-
-    select.addEventListener('change', toggleNewCategory);
-    toggleNewCategory();           // correct state on page load / back button
-  })();
-</script>
-
-        <!-- Inventory -->
-        <div class="border rounded-3 p-3 mb-4">
-
-          <h2 class="h6 fw-bold mb-3">
-            <i class="bi bi-box-seam me-2"></i>
-            Inventory Information
-          </h2>
-
-          <div class="mb-2">
-            <label for="total_copies" class="form-label fw-semibold">
-              Total Copies *
-            </label>
-
-            <input
-              type="number"
-              class="form-control"
-              id="total_copies"
-              name="total_copies"
-              min="0"
-              step="1"
-              value="1"
-              required
-            >
-
-            <div class="form-text">
-              All copies will initially be available for borrowing.
+            <div class="col-12 col-md-6">
+              <label for="isbn" class="form-label fw-semibold">
+                ISBN <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control font-monospace"
+                id="isbn"
+                name="isbn"
+                placeholder="Enter 13-digit ISBN (e.g. 9780262033848)"
+                minlength="13"
+                maxlength="13"
+                pattern="[0-9]{13}"
+                inputmode="numeric"
+                title="ISBN must contain exactly 13 numeric digits."
+                required
+              >
+              <div class="form-text small text-secondary">
+                Must be exactly 13 digits without hyphens.
+              </div>
             </div>
           </div>
-
         </div>
 
-        <!-- Actions -->
-        <div class="d-flex flex-wrap justify-content-end gap-2">
+        <hr class="my-4 text-muted opacity-25">
 
-          <a href="/books" class="btn btn-outline-secondary px-4">
-            Cancel
-          </a>
+        <!-- Section 2: Publication & Category -->
+        <div class="books-form-section mb-4">
+          <div class="books-section-label text-uppercase text-secondary small fw-bold mb-3">Publication &amp; Category</div>
 
-          <button type="submit" class="btn btn-success px-4">
-            <i class="bi bi-plus-lg me-2"></i>
-            Add Book
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="publisher" class="form-label fw-semibold">Publisher</label>
+              <input
+                type="text"
+                class="form-control"
+                id="publisher"
+                name="publisher"
+                placeholder="e.g. MIT Press"
+                maxlength="50"
+              >
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="pub_year" class="form-label fw-semibold">
+                Publication Year <span class="text-danger">*</span>
+              </label>
+              <input
+                type="number"
+                class="form-control font-monospace"
+                id="pub_year"
+                name="pub_year"
+                min="1901"
+                max="2155"
+                step="1"
+                placeholder="e.g. 2022"
+                required
+              >
+            </div>
+
+            <div class="col-12">
+              <label for="category_id" class="form-label fw-semibold">
+                Category <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="category_id" name="category_id" required>
+                <option value="" selected disabled>Select a category</option>
+                <% categories.forEach(category => { %>
+                  <option value="<%= category.category_id %>">
+                    <%= category.category_name %>
+                  </option>
+                <% }) %>
+                <option value="other">+ Other (Add new category)</option>
+              </select>
+
+              <!-- Inline field when "Other" is chosen -->
+              <div id="newCategoryWrapper" class="mt-3 p-3 bg-light rounded-3 d-none border">
+                <label for="new_category_name" class="form-label fw-semibold small">
+                  New Category Name <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  id="new_category_name"
+                  name="new_category_name"
+                  maxlength="20"
+                  placeholder="e.g. Artificial Intelligence"
+                >
+                <div class="form-text small text-secondary">
+                  Maximum 20 characters. Will be created automatically.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4 text-muted opacity-25">
+
+        <!-- Section 3: Inventory -->
+        <div class="books-form-section mb-4">
+          <div class="books-section-label text-uppercase text-secondary small fw-bold mb-3">Inventory Setup</div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="total_copies" class="form-label fw-semibold">
+                Initial Total Copies <span class="text-danger">*</span>
+              </label>
+              <input
+                type="number"
+                class="form-control font-monospace"
+                id="total_copies"
+                name="total_copies"
+                min="1"
+                step="1"
+                value="1"
+                required
+              >
+              <div class="form-text small text-secondary">
+                All copies will immediately become available in catalog.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 pt-3 border-top">
+          <a href="/books" class="books-btn-secondary px-4">Cancel</a>
+          <button type="submit" class="books-btn-primary">
+            <i class="bi bi-plus-lg books-btn-icon-gold me-1" aria-hidden="true"></i>
+            <span>Save Book</span>
           </button>
-
         </div>
-
       </form>
-
     </div>
   </div>
 
+  <script>
+    (function () {
+      const select = document.getElementById('category_id');
+      const wrapper = document.getElementById('newCategoryWrapper');
+      const input = document.getElementById('new_category_name');
+
+      if (!select || !wrapper || !input) return;
+
+      function toggleNewCategory() {
+        const isOther = select.value === 'other';
+        wrapper.classList.toggle('d-none', !isOther);
+        input.required = isOther;
+        input.disabled = !isOther;
+        if (isOther) input.focus();
+        else input.value = '';
+      }
+
+      select.addEventListener('change', toggleNewCategory);
+      toggleNewCategory();
+    })();
+  </script>
 </div>

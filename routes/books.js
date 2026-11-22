@@ -11,7 +11,7 @@ router.get(
     const sql = `SELECT * from book_details`;
     const [books] = await db.query(sql);
     res.render('books/books.ejs', { books });
-  })
+  }),
 );
 
 // Add new Book
@@ -21,24 +21,38 @@ router.get(
     const [categories] = await db.query(
       `SELECT category_id, category_name
        FROM category
-       ORDER BY category_name`
+       ORDER BY category_name`,
     );
     res.render('books/new.ejs', { categories });
-  })
+  }),
 );
 
 // view single book
 router.get(
   '/:book_id',
   wrapAsync(async (req, res) => {
+    const bookId = Number(req.params.book_id);
+    if (!Number.isSafeInteger(bookId) || bookId <= 0) {
+      return res.status(400).send('Invalid book ID');
+    }
     const sql = `SELECT * FROM book_details WHERE book_id = ?`;
-    const [rows] = await db.query(sql, [req.params.book_id]);
+    const [rows] = await db.query(sql, [bookId]);
     const book = rows[0];
     if (!book) {
       return res.status(404).send('Book not found');
     }
-    res.render('books/view.ejs', { book });
-  })
+    const [activeLoans] = await db.query(
+      `SELECT i.issue_id, i.member_id, i.issue_date, i.due_date,
+              DATEDIFF(CURDATE(), i.due_date) AS days_overdue,
+              m.name AS member_name, m.member_type, m.phone
+       FROM issue i
+       JOIN members m ON m.member_id = i.member_id
+       WHERE i.book_id = ? AND i.return_date IS NULL
+       ORDER BY i.due_date ASC`,
+      [bookId],
+    );
+    res.render('books/view.ejs', { book, activeLoans: activeLoans || [] });
+  }),
 );
 
 // Book update.ejs
@@ -55,7 +69,7 @@ router.get(
         `SELECT *
        FROM books
        WHERE book_id = ?`,
-        [bookId]
+        [bookId],
       );
       if (bookRows.length === 0) {
         return res.status(404).send('Book not found');
@@ -65,7 +79,7 @@ router.get(
       const [categories] = await db.query(
         `SELECT category_id, category_name
        FROM category
-       ORDER BY category_name`
+       ORDER BY category_name`,
       );
       // 3. Pass both datasets to EJS
       res.render('books/update.ejs', {
@@ -76,7 +90,7 @@ router.get(
       console.error('Error loading update form:', err);
       res.status(500).send('Unable to load the update form');
     }
-  })
+  }),
 );
 
 // -[ ] : Error -> Delete must be method override or POST
@@ -96,10 +110,13 @@ router.post('/:book_id/delete', async (req, res, next) => {
     // active loan check handler
     const [rows] = await db.query(
       'select count(i.book_id) as active_loans from issue i where book_id = ?',
-      [book_id]
+      [book_id],
     );
     if (rows[0].active_loans > 0) {
-      req.flash('warning', `Book Cannot be deleted, It has ${rows[0].active_loans} active loan`);
+      req.flash(
+        'warning',
+        `Book Cannot be deleted, It has ${rows[0].active_loans} active loan`,
+      );
       req.session.save((err) => {
         if (err) {
           next(err);
@@ -123,10 +140,18 @@ router.post(
   '/:book_id/update',
   wrapAsync(async (req, res) => {
     const book_id = req.params.book_id;
-    const { isbn, title, author, publisher, pub_year, category_id, total_copies } = req.body;
+    const {
+      isbn,
+      title,
+      author,
+      publisher,
+      pub_year,
+      category_id,
+      total_copies,
+    } = req.body;
     const [issuedRows] = await db.query(
       'SELECT count(*) as active FROM issue where book_id = ? AND return_date is null',
-      [book_id]
+      [book_id],
     );
     if (!issuedRows[0]) {
       req.flash('error', 'No Active Loans');
@@ -147,7 +172,7 @@ router.post(
     ]);
     req.flash('success', `Book info updated Successfully!`);
     res.redirect(`/books/${book_id}`);
-  })
+  }),
 );
 
 // Add new Book
@@ -158,9 +183,10 @@ router.post(
     let resolvedCategoryId = req.body.category_id;
     console.log(resolvedCategoryId);
     if (resolvedCategoryId === 'other' && req.body.new_category_name) {
-      const [categoryResult] = await db.query(`INSERT INTO category (category_name) values (?)`, [
-        req.body.new_category_name.trim(),
-      ]);
+      const [categoryResult] = await db.query(
+        `INSERT INTO category (category_name) values (?)`,
+        [req.body.new_category_name.trim()],
+      );
       resolvedCategoryId = categoryResult.insertId;
       console.log(resolvedCategoryId);
     }
@@ -176,7 +202,7 @@ router.post(
       total_copies,
     ]);
     res.redirect('/books');
-  })
+  }),
 );
 
 module.exports = router;

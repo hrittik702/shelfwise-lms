@@ -60,4 +60,6 @@ where book_id = 4;
 select *
 from issue;
 
+Create or REPLACE view fine_details as select * from fine f join issue i on f.issue_id = i.issue_id;
+
 SELECT * FROM sessions;

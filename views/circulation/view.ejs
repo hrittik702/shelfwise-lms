@@ -1,110 +1,250 @@
 <% layout('/layout/boilerplate') %>
-<div class="container py-4 py-lg-5">
-
+<div class="circ-page container py-4 py-lg-5">
   <%
-    const fmt = (d) => d
-      ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-      : '—';
+    const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
     const FINE_PER_DAY = 2;
-    const overdueCount = issues.filter((i) => Number(i.days_overdue) > 0).length;
-    const dueTodayCount = issues.filter((i) => Number(i.days_overdue) === 0).length;
+    const tab = typeof currentTab !== 'undefined' ? currentTab : 'active';
   %>
 
   <!-- Page heading -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div
+    class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4"
+  >
     <div>
-      <h1 class="h3 fw-bold mb-1">Circulation</h1>
-      <p class="text-secondary mb-0">Books currently issued to members.</p>
+      <h1 class="circ-title h3 fw-bold mb-1">Circulation &amp; Transactions</h1>
+      <p class="text-secondary mb-0">
+        Monitor active loans, track returns, and audit overdue penalties.
+      </p>
     </div>
-    <a href="/circulation/issue" class="btn btn-success px-4">
-      <span aria-hidden="true">+</span> New Transaction
+    <div class="d-flex align-items-center gap-2">
+      <a href="/fine" class="btn btn-outline-secondary btn-sm px-3">
+        <i class="bi bi-receipt me-1" aria-hidden="true"></i>
+        <span>Fine Ledger</span>
+      </a>
+      <a href="/circulation/issue" class="circ-btn-primary">
+        <i class="bi bi-plus-lg circ-btn-icon-gold me-1" aria-hidden="true"></i>
+        <span>New Transaction</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+      <div class="circ-summary-card p-3 p-md-4 h-100 bg-white">
+        <div class="text-secondary small fw-medium mb-1">Active Loans</div>
+        <div class="fs-2 fw-bold circ-count-active"><%= activeCount %></div>
+        <div class="small text-secondary mt-1">Books currently with members</div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div
+        class="circ-summary-card p-3 p-md-4 h-100 bg-white <%= overdueCount > 0 ? 'circ-card-overdue' : '' %>"
+      >
+        <div class="text-secondary small fw-medium mb-1">Overdue Loans</div>
+        <div
+          class="fs-2 fw-bold <%= overdueCount > 0 ? 'circ-count-overdue' : 'text-secondary' %>"
+        >
+          <%= overdueCount %>
+        </div>
+        <div class="small <%= overdueCount > 0 ? 'text-danger' : 'text-secondary' %> mt-1">
+          <%= overdueCount > 0 ? 'Accumulating daily late fees' : 'No overdue loans' %>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div
+        class="circ-summary-card p-3 p-md-4 h-100 bg-white <%= dueTodayCount > 0 ? 'circ-card-due-today' : '' %>"
+      >
+        <div class="text-secondary small fw-medium mb-1">Due Today</div>
+        <div
+          class="fs-2 fw-bold <%= dueTodayCount > 0 ? 'circ-count-due-today' : 'text-secondary' %>"
+        >
+          <%= dueTodayCount %>
+        </div>
+        <div class="small text-secondary mt-1">Expected for return today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <a
+      href="/circulation?tab=active"
+      class="btn btn-sm <%= tab === 'active' ? 'btn-success' : 'btn-outline-secondary' %>"
+    >
+      <i class="bi bi-book me-1" aria-hidden="true"></i>
+      Active Loans (<%= activeCount %>)
+    </a>
+    <a
+      href="/circulation?tab=overdue"
+      class="btn btn-sm <%= tab === 'overdue' ? 'btn-danger' : 'btn-outline-secondary' %>"
+    >
+      <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
+      Overdue Only (<%= overdueCount %>)
+    </a>
+    <a
+      href="/circulation?tab=returned"
+      class="btn btn-sm <%= tab === 'returned' ? 'btn-success' : 'btn-outline-secondary' %>"
+    >
+      <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>
+      Returned History (<%= returnedCount %>)
+    </a>
+    <a
+      href="/circulation?tab=all"
+      class="btn btn-sm <%= tab === 'all' ? 'btn-dark' : 'btn-outline-secondary' %>"
+    >
+      <i class="bi bi-list-ul me-1" aria-hidden="true"></i>
+      All Transactions (<%= allCount %>)
     </a>
   </div>
 
-  <!-- Summary -->
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-md-4">
-      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-        <div class="text-secondary small">Currently Issued</div>
-        <div class="fs-3 fw-bold"><%= issues.length %></div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-        <div class="text-secondary small">Overdue</div>
-        <div class="fs-3 fw-bold <%= overdueCount > 0 ? 'text-danger' : '' %>"><%= overdueCount %></div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-        <div class="text-secondary small">Due Today</div>
-        <div class="fs-3 fw-bold <%= dueTodayCount > 0 ? 'text-warning-emphasis' : '' %>"><%= dueTodayCount %></div>
-      </div>
-    </div>
-  </div>
-
   <!-- Responsive table -->
-  <div class="table-responsive border rounded-3 shadow-sm">
-    <table class="table table-hover table-striped align-middle mb-0">
-      <thead class="table-light">
+  <div
+    class="table-responsive circ-table-wrapper rounded-3 shadow-sm border mb-3"
+  >
+    <table class="table table-hover table-striped align-middle mb-0 circ-table">
+      <thead>
         <tr>
-          <th scope="col" class="ps-3 text-secondary small text-center">S.No.</th>
-          <th scope="col">Book</th>
+          <th scope="col" class="ps-3 text-center" style="width: 48px">S.No</th>
+          <th scope="col">Book Title</th>
           <th scope="col">Member</th>
-          <th scope="col" class="text-center">Issued</th>
-          <th scope="col" class="text-center">Due</th>
-          <th scope="col" class="text-center">Status</th>
-          <th scope="col" class="text-end">Est. Fine</th>
-          <th scope="col" class="pe-3">Issued By</th>
+          <th scope="col" class="text-center">Issued On</th>
+          <th scope="col" class="text-center">Loan / Return Status</th>
+          <th scope="col" class="text-center">Fine / Ledger</th>
+          <th scope="col">Issued By</th>
+          <th scope="col" class="text-end pe-3" style="width: 140px">Action</th>
         </tr>
       </thead>
       <tbody>
         <% if (issues.length > 0) { %>
           <% issues.forEach((issue, index) => {
-            const days = Number(issue.days_overdue);
+            const isReturned = Boolean(issue.return_date);
+            const days = Number(issue.days_overdue) || 0;
             const fine = days > 0 ? days * FINE_PER_DAY : 0;
           %>
-            <tr>
-              <td class="ps-3 text-center text-secondary small"><%= index + 1 %></td>
+          <tr>
+            <td class="ps-3 text-center text-secondary small">
+              <%= index + 1 %>
+            </td>
 
-              <td class="fw-semibold">
-  <a href="/books/<%= issue.book_id %>" class="link-subtle"><%= issue.book_title %></a>
-</td>
+            <td class="fw-semibold">
+              <a
+                href="/books/<%= issue.book_id %>"
+                class="link-subtle"
+                title="<%= issue.book_title %>"
+              >
+                <%= issue.book_title %>
+              </a>
+              <% if (issue.isbn) { %>
+                <div class="text-secondary small font-monospace">ISBN: <%= issue.isbn %></div>
+              <% } %>
+            </td>
 
-<td>
-  <a href="/members/<%= issue.member_id %>" class="link-subtle"><%= issue.member_name %></a>
-  <span class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1">
-    <%= issue.member_type %>
-  </span>
-</td>
+            <td>
+              <a href="/members/<%= issue.member_id %>" class="link-subtle fw-medium">
+                <%= issue.member_name %>
+              </a>
+              <span
+                class="badge rounded-pill text-bg-light border text-dark fw-normal text-capitalize ms-1"
+              >
+                <%= issue.member_type %>
+              </span>
+            </td>
 
-              <td class="text-center small text-nowrap"><%= fmt(issue.issue_date) %></td>
-              <td class="text-center small text-nowrap"><%= fmt(issue.due_date) %></td>
+            <td class="text-center small text-nowrap font-monospace">
+              <%= fmt(issue.issue_date) %>
+            </td>
 
-              <td class="text-center">
-                <% if (days > 0) { %>
-                  <span class="badge rounded-pill text-bg-danger"><%= days %> day<%= days === 1 ? '' : 's' %> overdue</span>
-                <% } else if (days === 0) { %>
-                  <span class="badge rounded-pill text-bg-warning">Due today</span>
+            <td class="text-center text-nowrap">
+              <% if (isReturned) { %>
+                <span class="circ-status-badge circ-status-active" title="Returned on <%= fmt(issue.return_date) %>">
+                  <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>Returned <%= fmt(issue.return_date) %>
+                </span>
+              <% } else if (days > 0) { %>
+                <span class="circ-status-badge circ-status-overdue" title="Due on <%= fmt(issue.due_date) %>">
+                  <i class="bi bi-clock-history me-1" aria-hidden="true"></i><%= days %>d overdue
+                </span>
+              <% } else if (days === 0) { %>
+                <span class="circ-status-badge circ-status-due-today">
+                  Due today
+                </span>
+              <% } else { %>
+                <span class="circ-status-badge circ-status-active" title="Due on <%= fmt(issue.due_date) %>">
+                  <%= Math.abs(days) %>d left
+                </span>
+              <% } %>
+            </td>
+
+            <td class="text-center text-nowrap">
+              <% if (issue.fine_amount) { %>
+                <% if (issue.fine_paid_status === 'paid') { %>
+                  <span class="badge text-bg-success-subtle text-success border border-success-subtle font-monospace" title="Settled on <%= fmt(issue.fine_paid_date) %>">
+                    <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>₹<%= issue.fine_amount %> Paid
+                  </span>
                 <% } else { %>
-                  <span class="badge rounded-pill text-bg-success"><%= Math.abs(days) %> day<%= days === -1 ? '' : 's' %> left</span>
+                  <span class="badge text-bg-danger-subtle text-danger border border-danger-subtle font-monospace" title="Unpaid library fine">
+                    <i class="bi bi-exclamation-circle-fill me-1" aria-hidden="true"></i>₹<%= issue.fine_amount %> Unpaid
+                  </span>
                 <% } %>
-              </td>
+              <% } else if (!isReturned && days > 0) { %>
+                <span class="text-danger fw-semibold font-monospace" title="Estimated accruing fine">
+                  ₹<%= fine %> (Est.)
+                </span>
+              <% } else { %>
+                <span class="text-secondary small font-monospace">—</span>
+              <% } %>
+            </td>
 
-              <td class="text-end text-nowrap <%= fine > 0 ? 'text-danger fw-semibold' : 'text-secondary' %>">
-                <%= fine > 0 ? '₹' + fine : '—' %>
-              </td>
+            <td class="small text-secondary"><%= issue.staff_name || 'Staff' %></td>
 
-              <td class="pe-3 small text-secondary"><%= issue.staff_name %></td>
-            </tr>
+            <td class="text-end pe-3 text-nowrap">
+              <% if (!isReturned) { %>
+                <a
+                  href="/circulation/<%= issue.issue_id %>/return"
+                  class="circ-return-btn text-decoration-none"
+                  aria-label="Review and return <%= issue.book_title %> borrowed by <%= issue.member_name %>"
+                >
+                  <i class="bi bi-arrow-return-left me-1" aria-hidden="true"></i>
+                  <span>Return</span>
+                </a>
+              <% } else if (issue.fine_paid_status === 'unpaid') { %>
+                <a
+                  href="/fine"
+                  class="btn btn-sm btn-outline-danger px-2 py-1"
+                  title="Collect fine for this returned book"
+                >
+                  <i class="bi bi-cash me-1" aria-hidden="true"></i>
+                  <span>Collect</span>
+                </a>
+              <% } else { %>
+                <span class="text-secondary small">
+                  <i class="bi bi-check2 text-success me-1" aria-hidden="true"></i>Closed
+                </span>
+              <% } %>
+            </td>
+          </tr>
           <% }) %>
         <% } else { %>
           <tr>
             <td colspan="8" class="text-center py-5">
-              <div class="fw-semibold mb-1">No books are currently issued</div>
-              <div class="text-secondary small">
-                Start with <a href="/circulation/issue">a new transaction</a>.
+              <div class="circ-empty-icon mb-2">
+                <i
+                  class="bi bi-journal-check fs-2 text-secondary"
+                  aria-hidden="true"
+                ></i>
               </div>
+              <h2 class="h5 fw-bold mb-1 text-dark">No transactions found</h2>
+              <p class="text-secondary small mb-3">
+                No circulation records match the current view criteria.
+              </p>
+              <a
+                href="/circulation/issue"
+                class="btn btn-outline-success btn-sm px-3"
+              >
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                Start a new transaction
+              </a>
             </td>
           </tr>
         <% } %>
@@ -113,6 +253,7 @@
   </div>
 
   <div class="small text-secondary mt-3">
-    Estimated fine is calculated up to today at ₹2 per day. The final fine is recorded when the book is returned.
+    Estimated fines are calculated at ₹2 per overdue day. The final fine is
+    recorded when the book is returned.
   </div>
 </div>

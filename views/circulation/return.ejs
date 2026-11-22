@@ -1,0 +1,476 @@
+<% layout('/layout/boilerplate') %>
+
+<div class="return-page container py-4 py-lg-5">
+  <% const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day:
+  '2-digit', month: 'short', year: 'numeric' }) : '—'; const days =
+  Number(issue.days_overdue) || 0; const isOverdue = days > 0; const isDueToday
+  = days === 0; const finePerDay = 2; const estFine = isOverdue ? days *
+  finePerDay : 0; %>
+
+  <!-- Back navigation -->
+  <div class="mb-4">
+    <a href="/circulation" class="return-back-link">
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+      <span>Back to Circulation</span>
+    </a>
+  </div>
+
+  <!-- Heading -->
+  <div class="mb-4">
+    <h1 class="return-title h3 fw-bold mb-1">Return Book</h1>
+    <p class="return-subtitle mb-0 text-secondary">
+      Review the loan details and confirm the return of the selected book.
+    </p>
+  </div>
+
+  <div class="row g-4">
+    <!-- LEFT: Main Column (Selected Loan & Other Active Loans) -->
+    <div class="col-12 col-lg-8">
+      <!-- Selected Book Review Card -->
+      <div
+        class="card return-card return-card-primary mb-4 shadow-sm border-0 rounded-4 overflow-hidden"
+      >
+        <div
+          class="card-header return-card-header bg-white border-bottom p-3 p-md-4 d-flex flex-wrap justify-content-between align-items-center gap-2"
+        >
+          <div class="d-flex align-items-center gap-3">
+            <span class="return-step-icon">
+              <i class="bi bi-journal-arrow-down fs-5" aria-hidden="true"></i>
+            </span>
+            <div>
+              <h2 class="h5 fw-bold mb-0 text-dark">
+                Selected Book for Return
+              </h2>
+              <span class="text-secondary small font-monospace"
+                >Loan Reference: #<%= issue.issue_id %></span
+              >
+            </div>
+          </div>
+          <div>
+            <% if (isOverdue) { %>
+            <span class="circ-status-badge circ-status-overdue">
+              <i
+                class="bi bi-exclamation-circle-fill me-1"
+                aria-hidden="true"
+              ></i>
+              <%= days %>
+              day<%= days === 1 ? '' : 's' %>
+              overdue
+            </span>
+            <% } else if (isDueToday) { %>
+            <span class="circ-status-badge circ-status-due-today">
+              <i class="bi bi-clock-fill me-1" aria-hidden="true"></i>
+              Due today
+            </span>
+            <% } else { %>
+            <span class="circ-status-badge circ-status-active">
+              <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>
+              <%= Math.abs(days) %>
+              day<%= days === -1 ? '' : 's' %>
+              left
+            </span>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="card-body p-3 p-md-4">
+          <!-- Book Information -->
+          <div class="return-section mb-4">
+            <div
+              class="return-section-label text-uppercase text-secondary small fw-bold mb-3"
+            >
+              Book Information
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-8">
+                <div class="text-secondary small mb-1">Book Title</div>
+                <div class="fs-5 fw-bold text-dark">
+                  <a
+                    href="/books/<%= issue.book_id %>"
+                    class="return-book-link"
+                    title="View catalog details"
+                  >
+                    <%= issue.book_title %>
+                  </a>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="text-secondary small mb-1">Author</div>
+                <div class="fw-semibold text-dark">
+                  <%= issue.author || '—' %>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="text-secondary small mb-1">ISBN</div>
+                <div class="fw-semibold text-dark font-monospace">
+                  <%= issue.isbn %>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="text-secondary small mb-1">Publisher</div>
+                <div class="text-dark"><%= issue.publisher || '—' %></div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="text-secondary small mb-1">Category &amp; Year</div>
+                <div class="text-dark">
+                  <span class="badge bg-light text-dark border text-capitalize"
+                    ><%= issue.category_name || 'General' %></span
+                  >
+                  <span class="text-secondary ms-1"
+                    ><%= issue.pub_year ? '(' + issue.pub_year + ')' : ''
+                    %></span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4 text-muted opacity-25" />
+
+          <!-- Loan Timeline & Details -->
+          <div class="return-section mb-4">
+            <div
+              class="return-section-label text-uppercase text-secondary small fw-bold mb-3"
+            >
+              Loan Timeline &amp; Staff
+            </div>
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <div class="text-secondary small mb-1">Issue Date</div>
+                <div class="fw-semibold text-dark font-monospace">
+                  <%= fmt(issue.issue_date) %>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-secondary small mb-1">Due Date</div>
+                <div
+                  class="fw-semibold text-dark font-monospace <%= isOverdue ? 'text-danger' : '' %>"
+                >
+                  <%= fmt(issue.due_date) %>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-secondary small mb-1">Issued By</div>
+                <div class="text-dark"><%= issue.staff_name || '—' %></div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-secondary small mb-1">Standard Duration</div>
+                <div class="text-dark">14 days</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fine Assessment Box -->
+          <div
+            class="return-fine-box p-3 rounded-3 mb-4 <%= isOverdue ? 'return-fine-overdue' : 'return-fine-normal' %>"
+          >
+            <div
+              class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2"
+            >
+              <div class="d-flex align-items-center gap-2">
+                <i
+                  class="bi <%= isOverdue ? 'bi-exclamation-triangle-fill text-danger fs-4' : 'bi-shield-check text-success fs-4' %>"
+                  aria-hidden="true"
+                ></i>
+                <div>
+                  <div
+                    class="fw-bold <%= isOverdue ? 'text-danger' : 'text-dark' %>"
+                  >
+                    <%= isOverdue ? 'Overdue Fine Due' : (isDueToday ? 'Due Today — No Fine' : 'On-Time Return') %>
+                  </div>
+                  <div class="text-secondary small">
+                    <%= isOverdue ? days + ' day' + (days === 1 ? '' : 's') + ' overdue × ₹' + finePerDay + '/day' : 'No fine applies for this transaction.' %>
+                    <% if (typeof existingFine !== 'undefined' && existingFine) { %>
+                    <span class="ms-1"
+                      >(Existing ledger record: ₹<%= existingFine.amount %> <%= existingFine.paid_status %>)</span
+                    >
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+              <div class="text-sm-end">
+                <span class="text-secondary small d-block">Estimated Fine</span>
+                <span
+                  class="fs-4 fw-bold font-monospace <%= isOverdue ? 'text-danger' : 'text-dark' %>"
+                >
+                  <%= isOverdue ? '₹' + estFine : '₹0' %>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirmation Action Bar -->
+          <div
+            class="return-action-bar pt-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3"
+          >
+            <div class="text-secondary small">
+              <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+              Only <strong>&ldquo;<%= issue.book_title %>&rdquo;</strong> will
+              be returned. Other books remain active.
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+              <a
+                href="/circulation"
+                class="btn btn-outline-secondary px-3 return-btn-cancel"
+                >Cancel</a
+              >
+              <form
+                action="/circulation/<%= issue.issue_id %>/return"
+                method="POST"
+                id="returnForm"
+                class="m-0"
+                data-confirm="Confirm the return of &ldquo;<%= issue.book_title %>&rdquo; borrowed by <%= issue.member_name %>?<%= estFine > 0 ? ' An overdue fine of ₹' + estFine + ' will be recorded.' : ' Only this selected book will be returned.' %>"
+                data-title="Confirm Book Return"
+                data-btn="Confirm Return"
+                data-variant="success"
+              >
+                <button
+                  type="submit"
+                  class="return-btn-submit"
+                  id="returnSubmitBtn"
+                >
+                  <i
+                    class="bi bi-arrow-return-left me-1"
+                    aria-hidden="true"
+                  ></i>
+                  <span>Confirm Return</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Active Loans by this member -->
+      <div
+        class="card return-card shadow-sm border-0 rounded-4 overflow-hidden"
+      >
+        <div
+          class="card-header return-card-header bg-white border-bottom p-3 p-md-4 d-flex justify-content-between align-items-center"
+        >
+          <div>
+            <h2 class="h5 fw-bold mb-0 text-dark">Other Active Loans</h2>
+            <p class="text-secondary small mb-0">
+              Other books currently borrowed by <%= issue.member_name %>
+            </p>
+          </div>
+          <span class="badge rounded-pill bg-light text-dark border">
+            <%= otherIssues.length %> other loan<%= otherIssues.length === 1 ?
+            '' : 's' %>
+          </span>
+        </div>
+
+        <div class="card-body p-0">
+          <% if (otherIssues.length > 0) { %>
+          <div class="table-responsive">
+            <table
+              class="table table-hover align-middle mb-0 return-other-table"
+            >
+              <thead>
+                <tr>
+                  <th scope="col" class="ps-3 text-center" style="width: 44px">
+                    #
+                  </th>
+                  <th scope="col">Book</th>
+                  <th scope="col">ISBN</th>
+                  <th scope="col" class="text-center">Issued On</th>
+                  <th scope="col" class="text-center">Due Date</th>
+                  <th scope="col" class="text-center">Status</th>
+                  <th scope="col" class="text-end pe-3">Est. Fine</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% otherIssues.forEach((o, idx) => { const oDays =
+                Number(o.days_overdue) || 0; const oFine = oDays > 0 ? oDays *
+                finePerDay : 0; %>
+                <tr>
+                  <td class="ps-3 text-center text-secondary small">
+                    <%= idx + 1 %>
+                  </td>
+                  <td>
+                    <a
+                      href="/books/<%= o.book_id %>"
+                      class="return-book-link fw-semibold"
+                      title="View catalog details"
+                    >
+                      <%= o.book_title %>
+                    </a>
+                    <% if (o.author) { %>
+                    <div class="small text-secondary"><%= o.author %></div>
+                    <% } %>
+                  </td>
+                  <td class="small text-secondary font-monospace">
+                    <%= o.isbn %>
+                  </td>
+                  <td class="text-center small text-nowrap font-monospace">
+                    <%= fmt(o.issue_date) %>
+                  </td>
+                  <td
+                    class="text-center small text-nowrap font-monospace <%= oDays > 0 ? 'text-danger fw-semibold' : '' %>"
+                  >
+                    <%= fmt(o.due_date) %>
+                  </td>
+                  <td class="text-center text-nowrap">
+                    <% if (oDays > 0) { %>
+                    <span class="circ-status-badge circ-status-overdue">
+                      <%= oDays %> day<%= oDays === 1 ? '' : 's' %> overdue
+                    </span>
+                    <% } else if (oDays === 0) { %>
+                    <span class="circ-status-badge circ-status-due-today"
+                      >Due today</span
+                    >
+                    <% } else { %>
+                    <span class="circ-status-badge circ-status-active">
+                      <%= Math.abs(oDays) %> day<%= oDays === -1 ? '' : 's' %>
+                      left
+                    </span>
+                    <% } %>
+                  </td>
+                  <td
+                    class="text-end pe-3 font-monospace <%= oFine > 0 ? 'text-danger fw-semibold' : 'text-secondary' %>"
+                  >
+                    <%= oFine > 0 ? '₹' + oFine : '—' %>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 bg-light border-top text-secondary small">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            These other loans are informational only. Each book must be returned
+            individually when presented.
+          </div>
+          <% } else { %>
+          <div class="text-center py-5 px-3">
+            <i
+              class="bi bi-journal-check fs-2 text-secondary mb-2 d-block"
+              aria-hidden="true"
+            ></i>
+            <h3 class="h6 fw-bold text-dark mb-1">No other active loans</h3>
+            <p class="text-secondary small mb-0">
+              This member has no other books currently issued. Returning this
+              book will clear all their active borrowings.
+            </p>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Member Summary Sidebar Card -->
+    <div class="col-12 col-lg-4">
+      <div
+        class="card return-card shadow-sm border-0 rounded-4 overflow-hidden position-sticky"
+        style="top: 1.5rem"
+      >
+        <div class="card-header return-card-header bg-white border-bottom p-3">
+          <h2 class="h6 fw-bold mb-0 text-dark">Borrower Profile</h2>
+        </div>
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div
+              class="return-avatar rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+            >
+              <%= (issue.member_name || 'M').charAt(0).toUpperCase() %>
+            </div>
+            <div class="min-w-0">
+              <h3 class="h6 fw-bold text-dark mb-0 text-truncate">
+                <a
+                  href="/members/<%= issue.member_id %>"
+                  class="text-dark text-decoration-none"
+                  title="View member profile"
+                >
+                  <%= issue.member_name %>
+                </a>
+              </h3>
+              <span class="text-secondary small font-monospace"
+                >Member ID: #<%= issue.member_id %></span
+              >
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="badge text-bg-light border text-capitalize px-2 py-1"
+              ><%= issue.member_type %></span
+            >
+            <% if (issue.member_status === 'active') { %>
+            <span
+              class="badge text-bg-success-subtle text-success border border-success-subtle px-2 py-1 ms-1"
+              >Active</span
+            >
+            <% } else { %>
+            <span
+              class="badge text-bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 ms-1"
+              >Suspended</span
+            >
+            <% } %>
+          </div>
+
+          <dl class="return-member-dl mb-3 small">
+            <dt class="text-secondary fw-normal">Email</dt>
+            <dd class="fw-medium text-dark mb-2 text-break">
+              <%= issue.member_email || '—' %>
+            </dd>
+
+            <dt class="text-secondary fw-normal">Phone</dt>
+            <dd class="fw-medium text-dark mb-2 font-monospace">
+              <%= issue.member_phone || '—' %>
+            </dd>
+
+            <dt class="text-secondary fw-normal">Joined Date</dt>
+            <dd class="fw-medium text-dark mb-2 font-monospace">
+              <%= fmt(issue.member_join_date) %>
+            </dd>
+
+            <dt class="text-secondary fw-normal">Active Loans</dt>
+            <dd class="fw-semibold text-dark mb-0 font-monospace">
+              <%= 1 + otherIssues.length %> loan<%= (1 + otherIssues.length) ===
+              1 ? '' : 's' %> currently held
+            </dd>
+          </dl>
+
+          <div class="d-grid mt-4">
+            <a
+              href="/members/<%= issue.member_id %>"
+              class="btn btn-outline-secondary btn-sm"
+            >
+              <i class="bi bi-person me-1" aria-hidden="true"></i> View Full
+              Member Profile
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const returnForm = document.getElementById('returnForm');
+      const submitBtn = document.getElementById('returnSubmitBtn');
+      const modalConfirmBtn = document.getElementById('confirm');
+
+      if (!returnForm || !submitBtn) return;
+
+      // Handle loading state when confirmed via modal
+      if (modalConfirmBtn) {
+        modalConfirmBtn.addEventListener('click', function () {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Returning...';
+          modalConfirmBtn.disabled = true;
+          modalConfirmBtn.textContent = 'Returning...';
+        });
+      }
+
+      // Direct submission fallback
+      returnForm.addEventListener('submit', function (e) {
+        if (!returnForm.dataset.confirm && !submitBtn.disabled) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Returning...';
+        }
+      });
+    })();
+  </script>
+</div>
