@@ -1,3 +1,126 @@
+-- Category Data
+INSERT INTO category (category_name)
+VALUES ('Programming'),
+    ('Data Structures'),
+    ('Algorithms'),
+    ('Operating Systems'),
+    ('Computer Networks'),
+    ('Database Systems'),
+    ('Software Engineering'),
+    ('Code Quality'),
+    ('Web Development');
+-- Books Data 
+INSERT INTO books (
+        isbn,
+        title,
+        author,
+        publisher,
+        pub_year,
+        category_id,
+        total_copies,
+        available_copies
+    )
+VALUES (
+        '9780131103627',
+        'The C Programming Language',
+        'Brian W. Kernighan',
+        'Prentice Hall',
+        1988,
+        1,
+        5,
+        5
+    ),
+    (
+        '9780131101630',
+        'Data Structures and Algorithm Analysis in C++',
+        'Mark Allen Weiss',
+        'Pearson',
+        2014,
+        1,
+        4,
+        4
+    ),
+    (
+        '9780262033848',
+        'Introduction to Algorithms',
+        'Thomas H. Cormen',
+        'MIT Press',
+        2022,
+        1,
+        5,
+        5
+    ),
+    (
+        '9780073523323',
+        'Operating System Concepts',
+        'Abraham Silberschatz',
+        'Wiley',
+        2018,
+        1,
+        4,
+        4
+    ),
+    (
+        '9780133594140',
+        'Computer Networking: A Top-Down Approach',
+        'James F. Kurose',
+        'Pearson',
+        2021,
+        1,
+        4,
+        4
+    ),
+    (
+        '9780078022159',
+        'Database System Concepts',
+        'Abraham Silberschatz',
+        'McGraw Hill',
+        2019,
+        1,
+        5,
+        5
+    ),
+    (
+        '9780133943030',
+        'Software Engineering: A Practitioners Approach',
+        'Roger S. Pressman',
+        'McGraw Hill',
+        2014,
+        1,
+        3,
+        3
+    ),
+    (
+        '9789355423485',
+        'Let Us C',
+        'Yashavant Kanetkar',
+        'BPB Publications',
+        2022,
+        1,
+        5,
+        5
+    ),
+    (
+        '9780132350884',
+        'Clean Code: A Handbook of Agile Software Craftsmanship',
+        'Robert C. Martin',
+        'Prentice Hall',
+        2008,
+        1,
+        3,
+        3
+    ),
+    (
+        '9781491950296',
+        'Learning JavaScript Design Patterns',
+        'Addy Osmani',
+        'O Reilly Media',
+        2017,
+        1,
+        3,
+        3
+    );
+-- Members Data
 INSERT INTO members (
         member_id,
         name,

@@ -1,1 +1,0 @@
-select * from fine f join issue i on f.issue_id = i.issue_id;
